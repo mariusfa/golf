@@ -7,32 +7,6 @@ import (
 	"github.com/jarcoal/httpmock"
 )
 
-type MyDto struct {
-	Name string `json:"name"`
-}
-
-type fakeLogger struct {
-	RequestId     string
-	RequestPath   string
-	RequestMethod string
-	DurationMs    string
-	Status        int
-	ResponseBody  string
-}
-
-func (fl *fakeLogger) RequestInfo(requestId string, requestPath string, requestMethod string) {
-	fl.RequestId = requestId
-	fl.RequestPath = requestPath
-	fl.RequestMethod = requestMethod
-}
-
-func (fl *fakeLogger) ResponseInfo(requestId string, durationMs string, status int, responseBody string) {
-	fl.RequestId = requestId
-	fl.DurationMs = durationMs
-	fl.Status = status
-	fl.ResponseBody = responseBody
-}
-
 func TestGetJsonObject(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

@@ -41,7 +41,7 @@ func (c *HttpClient) getJsonPlain(request *GetRequest, dto any) error {
 	for key, value := range c.headers {
 		req.Header.Set(key, value)
 	}
-	c.logger.RequestInfo(request.RequestId, request.Url, "GET")
+	c.logger.RequestInfo(request.RequestId, "GET", request.Url, "")
 	start := time.Now()
 	resp, err := c.client.Do(req)
 	duratonMs := time.Since(start).Milliseconds()

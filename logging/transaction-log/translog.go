@@ -17,11 +17,37 @@ func NewTransLogger(appName string) *TransLogger {
 	return &TransLogger{appName: appName}
 }
 
-func (al *TransLogger) RequestInfo(requestId string, requestPath string, requestMethod string) {
+func (al *TransLogger) GetRequestInfo(requestId string, requestPath string) {
 	logLevel := "INFO"
 	logType := "transaction"
 
-	entry := newRequestLog(logLevel, logType, al.appName, requestMethod, requestPath, requestId)
+	entry := newRequestLog(logLevel, logType, al.appName, "GET", requestPath, requestId, "")
+	jsonEntry, err := json.Marshal(entry)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	log.Println(string(jsonEntry))
+}
+
+func (al *TransLogger) RequestInfo(requestId string, requestMethod string, requestPath string, requestBody string) {
+	logLevel := "INFO"
+	logType := "transaction"
+
+	entry := newRequestLog(logLevel, logType, al.appName, requestMethod, requestPath, requestId, requestBody)
+	entry.RequestBody = requestBody
+	jsonEntry, err := json.Marshal(entry)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	log.Println(string(jsonEntry))
+}
+
+func (al *TransLogger) PostRequestInfo(requestId string, requestPath string, requestBody string) {
+	logLevel := "INFO"
+	logType := "transaction"
+
+	entry := newRequestLog(logLevel, logType, al.appName, "POST", requestPath, requestId, requestBody)
+	entry.RequestBody = requestBody
 	jsonEntry, err := json.Marshal(entry)
 	if err != nil {
 		log.Println(err.Error())
@@ -50,9 +76,10 @@ type requestLog struct {
 	RequestMethod string `json:"request_method"`
 	RequestPath   string `json:"request_path"`
 	RequestId     string `json:"request_id"`
+	RequestBody   string `json:"request_body"`
 }
 
-func newRequestLog(logLevel string, logType string, appName string, requestMethod string, requestPath string, requestId string) *requestLog {
+func newRequestLog(logLevel string, logType string, appName string, requestMethod string, requestPath string, requestId string, requestBody string) *requestLog {
 	currentTime := time.Now()
 	return &requestLog{
 		Timestamp:     currentTime.Format("2006-01-02T15:04:05.000-07:00"),
@@ -63,6 +90,7 @@ func newRequestLog(logLevel string, logType string, appName string, requestMetho
 		RequestMethod: requestMethod,
 		RequestPath:   requestPath,
 		RequestId:     requestId,
+		RequestBody:   requestBody,
 	}
 }
 
