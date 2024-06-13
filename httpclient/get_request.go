@@ -20,9 +20,9 @@ func NewGetRequest(requestId string, headers map[string]string, url string) *Get
 	return &GetRequest{RequestId: requestId, Headers: headers, Url: url}
 }
 
-func (c *HttpClient) GetJsonObject(request *GetRequest, dto any) error {
+func (c *HttpClient) GetJson(request *GetRequest, dto any) error {
 	httpAction := func() error {
-		return c.getJsonObjectPlain(request, dto)
+		return c.getJsonPlain(request, dto)
 	}
 	bulkheadAction := func() error {
 		return c.bulkhead.Execute(httpAction)
@@ -33,7 +33,7 @@ func (c *HttpClient) GetJsonObject(request *GetRequest, dto any) error {
 	return circuitbreakerAction()
 }
 
-func (c *HttpClient) getJsonObjectPlain(request *GetRequest, dto any) error {
+func (c *HttpClient) getJsonPlain(request *GetRequest, dto any) error {
 	req, err := http.NewRequest("GET", request.Url, nil)
 	if err != nil {
 		return err
