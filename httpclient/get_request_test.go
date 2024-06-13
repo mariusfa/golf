@@ -43,7 +43,11 @@ func TestGetJsonObject(t *testing.T) {
 	client := NewHttpClient(fakeLogger)
 	var dto MyDto
 
-	err := client.GetJsonObject("http://localhost:8080", &dto)
+	requestId := "test"
+	url := "http://localhost:8080"
+	headers := map[string]string{"Accept": "application/json"}
+	getRequest := NewGetRequest(requestId, headers, url)
+	err := client.GetJsonObject(getRequest, &dto)
 
 	if err != nil {
 		t.Errorf("Expected nil, got %v", err)
