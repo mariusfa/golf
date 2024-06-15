@@ -17,36 +17,11 @@ func NewTransLogger(appName string) *TransLogger {
 	return &TransLogger{appName: appName}
 }
 
-func (al *TransLogger) GetRequestInfo(requestId string, requestPath string) {
-	logLevel := "INFO"
-	logType := "transaction"
-
-	entry := newRequestLog(logLevel, logType, al.appName, "GET", requestPath, requestId, "")
-	jsonEntry, err := json.Marshal(entry)
-	if err != nil {
-		log.Println(err.Error())
-	}
-	log.Println(string(jsonEntry))
-}
-
 func (al *TransLogger) RequestInfo(requestId string, requestMethod string, requestPath string, requestBody string) {
 	logLevel := "INFO"
 	logType := "transaction"
 
 	entry := newRequestLog(logLevel, logType, al.appName, requestMethod, requestPath, requestId, requestBody)
-	entry.RequestBody = requestBody
-	jsonEntry, err := json.Marshal(entry)
-	if err != nil {
-		log.Println(err.Error())
-	}
-	log.Println(string(jsonEntry))
-}
-
-func (al *TransLogger) PostRequestInfo(requestId string, requestPath string, requestBody string) {
-	logLevel := "INFO"
-	logType := "transaction"
-
-	entry := newRequestLog(logLevel, logType, al.appName, "POST", requestPath, requestId, requestBody)
 	entry.RequestBody = requestBody
 	jsonEntry, err := json.Marshal(entry)
 	if err != nil {
