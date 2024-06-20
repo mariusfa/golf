@@ -30,7 +30,10 @@ func (c *HttpClient) PutJson(request *PutRequest, responseDto any) error {
 	circuitbreakerAction := func() error {
 		return c.circuitbreaker.Execute(bulkheadAction)
 	}
-	return circuitbreakerAction()
+	if err := circuitbreakerAction(); err != nil {
+		return fmt.Errorf("httpclient failed to put: %w", err)
+	}
+	return nil
 }
 
 func (c *HttpClient) putJsonPlain(request *PutRequest, responseDto any) error {

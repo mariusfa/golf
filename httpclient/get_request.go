@@ -29,7 +29,10 @@ func (c *HttpClient) GetJson(request *GetRequest, dto any) error {
 	circuitbreakerAction := func() error {
 		return c.circuitbreaker.Execute(bulkheadAction)
 	}
-	return circuitbreakerAction()
+	if err := circuitbreakerAction(); err != nil {
+		return fmt.Errorf("httpclient failed to get: %w", err)
+	}
+	return nil
 }
 
 func (c *HttpClient) getJsonPlain(request *GetRequest, dto any) error {

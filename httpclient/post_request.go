@@ -30,7 +30,10 @@ func (c *HttpClient) PostJson(request *PostRequest, responseDto any) error {
 	circuitbreakerAction := func() error {
 		return c.circuitbreaker.Execute(bulkheadAction)
 	}
-	return circuitbreakerAction()
+	if err := circuitbreakerAction(); err != nil {
+		return fmt.Errorf("httpclient failed to post: %w", err)
+	}
+	return nil
 }
 
 func (c *HttpClient) postJsonPlain(request *PostRequest, responseDto any) error {

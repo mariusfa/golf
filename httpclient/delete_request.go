@@ -26,7 +26,10 @@ func (c *HttpClient) Delete(request *DeleteRequest) error {
 	circuitbreakerAction := func() error {
 		return c.circuitbreaker.Execute(bulkheadAction)
 	}
-	return circuitbreakerAction()
+	if err := circuitbreakerAction(); err != nil {
+		return fmt.Errorf("httpclient failed to delete: %w", err)
+	}
+	return nil
 }
 
 func (c *HttpClient) deletePlain(request *DeleteRequest) error {
