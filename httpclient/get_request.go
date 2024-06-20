@@ -3,7 +3,6 @@ package httpclient
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -36,7 +35,7 @@ func (c *HttpClient) GetJson(request *GetRequest, dto any) error {
 func (c *HttpClient) getJsonPlain(request *GetRequest, dto any) error {
 	req, err := http.NewRequest("GET", request.Url, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 	for key, value := range request.Headers {
 		req.Header.Set(key, value)
@@ -47,19 +46,19 @@ func (c *HttpClient) getJsonPlain(request *GetRequest, dto any) error {
 	duratonMs := time.Since(start).Milliseconds()
 	if err != nil {
 		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), 0, "")
-		return err
+		return fmt.Errorf("failed to do request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
-		return errors.New(fmt.Sprintf("%s from %s", resp.Status, request.Url))
+		return fmt.Errorf("%s from %s", resp.Status, request.Url)
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
-		return err
+		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	bodyString := string(bodyBytes)
@@ -68,5 +67,9 @@ func (c *HttpClient) getJsonPlain(request *GetRequest, dto any) error {
 
 	bodyReader := bytes.NewReader(bodyBytes)
 
-	return json.NewDecoder(bodyReader).Decode(dto)
+	if err := json.NewDecoder(bodyReader).Decode(dto); err != nil {
+		return fmt.Errorf("failed to decode response body: %w", err)
+	}
+
+	return nil
 }

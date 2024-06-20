@@ -1,7 +1,6 @@
 package httpclient
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -33,7 +32,7 @@ func (c *HttpClient) Delete(request *DeleteRequest) error {
 func (c *HttpClient) deletePlain(request *DeleteRequest) error {
 	req, err := http.NewRequest("DELETE", request.Url, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 	for key, value := range request.Headers {
 		req.Header.Set(key, value)
@@ -44,13 +43,13 @@ func (c *HttpClient) deletePlain(request *DeleteRequest) error {
 	duratonMs := time.Since(start).Milliseconds()
 	if err != nil {
 		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), 0, "")
-		return err
+		return fmt.Errorf("failed to do request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
 		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
-		return errors.New(fmt.Sprintf("%s from %s", resp.Status, request.Url))
+		return fmt.Errorf("%s from %s", resp.Status, request.Url)
 	}
 
 	c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")

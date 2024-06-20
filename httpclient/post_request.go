@@ -3,7 +3,6 @@ package httpclient
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -37,11 +36,11 @@ func (c *HttpClient) PostJson(request *PostRequest, responseDto any) error {
 func (c *HttpClient) postJsonPlain(request *PostRequest, responseDto any) error {
 	body, err := json.Marshal(request.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal body: %w", err)
 	}
 	req, err := http.NewRequest("POST", request.Url, bytes.NewBuffer(body))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 	for key, value := range request.Headers {
 		req.Header.Set(key, value)
@@ -52,19 +51,19 @@ func (c *HttpClient) postJsonPlain(request *PostRequest, responseDto any) error 
 	duratonMs := time.Since(start).Milliseconds()
 	if err != nil {
 		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), 0, "")
-		return err
+		return fmt.Errorf("failed to do request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
-		return errors.New(fmt.Sprintf("%s from %s", resp.Status, request.Url))
+		return fmt.Errorf("%s from %s", resp.Status, request.Url)
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
-		return err
+		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	if len(bodyBytes) == 0 {
@@ -72,10 +71,9 @@ func (c *HttpClient) postJsonPlain(request *PostRequest, responseDto any) error 
 		return nil
 	}
 
-	err = json.Unmarshal(bodyBytes, responseDto)
-	if err != nil {
+	if err := json.Unmarshal(bodyBytes, responseDto); err != nil {
 		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, string(bodyBytes))
-		return err
+		return fmt.Errorf("failed to unmarshal response body: %w", err)
 	}
 
 	c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, string(bodyBytes))
