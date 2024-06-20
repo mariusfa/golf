@@ -14,7 +14,6 @@ type logger interface {
 }
 
 type HttpClient struct {
-	headers        map[string]string
 	client         *http.Client
 	logger         logger
 	bulkhead       *bulkhead.Bulkhead
@@ -22,12 +21,9 @@ type HttpClient struct {
 }
 
 func NewHttpClient(logger logger) *HttpClient {
-	headers := map[string]string{
-		"Content-Type": "application/json",
-	}
-	timeout := 5 * time.Second
+	timeout := 15 * time.Second
 	client := &http.Client{Timeout: timeout}
 	bulkhead := bulkhead.NewBulkhead(bulkhead.Options{})
 	circuitbreaker := circuitbreaker.NewCircuitBreaker(circuitbreaker.Options{})
-	return &HttpClient{headers: headers, client: client, logger: logger, bulkhead: bulkhead, circuitbreaker: circuitbreaker}
+	return &HttpClient{client: client, logger: logger, bulkhead: bulkhead, circuitbreaker: circuitbreaker}
 }

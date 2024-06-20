@@ -43,7 +43,7 @@ func (c *HttpClient) putJsonPlain(request *PutRequest, responseDto any) error {
 	if err != nil {
 		return err
 	}
-	for key, value := range c.headers {
+	for key, value := range request.Headers {
 		req.Header.Set(key, value)
 	}
 	c.logger.RequestInfo(request.RequestId, "PUT", request.Url, string(body))

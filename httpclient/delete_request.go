@@ -35,7 +35,7 @@ func (c *HttpClient) deletePlain(request *DeleteRequest) error {
 	if err != nil {
 		return err
 	}
-	for key, value := range c.headers {
+	for key, value := range request.Headers {
 		req.Header.Set(key, value)
 	}
 	c.logger.RequestInfo(request.RequestId, "DELETE", request.Url, "")
