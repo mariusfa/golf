@@ -6,14 +6,26 @@ import (
 	"time"
 )
 
-var AccessLog AccessLogger
+var accesslog = NewAccessLogger("")
+
+func SetAppName(appName string) {
+	accesslog.appName = appName
+}
+
+func Info(durationMs int, status int, requestPath string, requestMethod string) {
+	accesslog.Info(durationMs, status, requestPath, requestMethod)
+}
+
+func GetLogger() *AccessLogger {
+	return accesslog
+}
 
 type AccessLogger struct {
 	appName string
 }
 
-func NewAccessLogger(appName string) AccessLogger {
-	return AccessLogger{appName: appName}
+func NewAccessLogger(appName string) *AccessLogger {
+	return &AccessLogger{appName: appName}
 }
 
 func (al *AccessLogger) Info(durationMs int, status int, requestPath string, requestMethod string) {
