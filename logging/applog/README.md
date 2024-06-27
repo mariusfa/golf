@@ -10,8 +10,8 @@ Init logger in main to be used everywhere in the app.
 ```go
 // In main function
 appName := "todo"
-applog.AppLog = applog.NewAppLogger(appName)
+applog.SetAppName(appName)
 
 // Used elsewhere in the app
-applog.AppLog.Info("This is an info message")
+applog.Info("This is an info message")
 ```
