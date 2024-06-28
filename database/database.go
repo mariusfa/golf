@@ -27,7 +27,7 @@ func Setup(dbConfig *DbConfig) (*sql.DB, error) {
 	connectionString := getAppConnectionString(dbConfig)
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error opening database: %w", err)
 	}
 	return db, nil
 }
@@ -35,16 +35,16 @@ func Setup(dbConfig *DbConfig) (*sql.DB, error) {
 func Migrate(dbConfig *DbConfig, migrationsPath string) error {
 	resolvedMigrationsPath := filepath.Join(migrationsPath, "resolved")
 	if err := resolveAllTemplates(dbConfig, migrationsPath, resolvedMigrationsPath); err != nil {
-		return err
+		return fmt.Errorf("Error resolving all templates: %w", err)
 	}
 
 	m, err := migrate.New("file://"+resolvedMigrationsPath, getMigrationConnectionString(dbConfig))
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating new migration: %w", err)
 	}
 
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return err
+		return fmt.Errorf("Error doing migrations: %w", err)
 	}
 
 	deleteDirectory(resolvedMigrationsPath)
@@ -53,23 +53,23 @@ func Migrate(dbConfig *DbConfig, migrationsPath string) error {
 
 func resolveAllTemplates(dbConfig *DbConfig, migrationsPath string, resolvedMigrationsPath string) error {
 	if err := deleteDirectory(resolvedMigrationsPath); err != nil {
-		return err
+		return fmt.Errorf("Error deleting directory: %w", err)
 	}
 
 	if err := createDirectory(resolvedMigrationsPath); err != nil {
-		return err
+		return fmt.Errorf("Error creating directory: %w", err)
 	}
 
 	if dbConfig.RunBaseLine == "true" {
 		baselinePath := filepath.Join(migrationsPath, "baseline")
 		if err := resolveTemplates(baselinePath, resolvedMigrationsPath, dbConfig); err != nil {
-			return err
+			return fmt.Errorf("Error resolving templates baseline: %w", err)
 		}
 	}
 
 	standardPath := filepath.Join(migrationsPath, "standard")
 	if err := resolveTemplates(standardPath, resolvedMigrationsPath, dbConfig); err != nil {
-		return err
+		return fmt.Errorf("Error resolving templates standard: %w", err)
 	}
 
 	return nil
@@ -97,7 +97,6 @@ func getFiles(fromPath string) ([]string, error) {
 	}
 	var files []string
 	for _, file := range dir {
-		println(file.Name())
 		files = append(files, file.Name())
 	}
 	return files, nil
