@@ -6,14 +6,26 @@ import (
 	"time"
 )
 
-var TraceLog TraceLogger
+var tracelogger = NewTraceLogger("")
+
+func SetAppName(appName string) {
+	tracelogger.appName = appName
+}
+
+func Info(payload string) {
+	tracelogger.Info(payload)
+}
+
+func Error(payload string) {
+	tracelogger.Error(payload)
+}
 
 type TraceLogger struct {
 	appName string
 }
 
-func NewTraceLogger(appName string) TraceLogger {
-	return TraceLogger{appName: appName}
+func NewTraceLogger(appName string) *TraceLogger {
+	return &TraceLogger{appName: appName}
 }
 
 func (tl *TraceLogger) Info(payload string) {

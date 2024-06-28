@@ -6,7 +6,23 @@ import (
 	"time"
 )
 
-var TransLog TransLogger
+var translogger = NewTransLogger("")
+
+func SetAppName(appName string) {
+	translogger.appName = appName
+}
+
+func RequestInfo(requestId string, requestMethod string, requestPath string, requestBody string) {
+	translogger.RequestInfo(requestId, requestMethod, requestPath, requestBody)
+}
+
+func ResponseInfo(requestId string, durationMs string, status int, responseBody string) {
+	translogger.ResponseInfo(requestId, durationMs, status, responseBody)
+}
+
+func GetLogger() *TransLogger {
+	return translogger
+}
 
 type TransLogger struct {
 	appName string
