@@ -29,10 +29,11 @@ func AccessLogMiddleware(next http.Handler, logger AccessLoggerPort) http.Handle
 
 		durationMs := time.Since(start).Milliseconds()
 		requestId := r.Header.Get("X-Request-Id")
-		logger.Info(int(durationMs), crw.status, r.URL.Path, r.Method, requestId)
+		userId := ""
+		logger.Info(int(durationMs), crw.status, r.URL.Path, r.Method, requestId, userId)
 	})
 }
 
 type AccessLoggerPort interface {
-	Info(durationMs int, status int, requestPath string, requestMethod string, requestId string)
+	Info(durationMs int, status int, requestPath string, requestMethod string, requestId string, userId string)
 }

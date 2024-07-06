@@ -12,8 +12,8 @@ func SetAppName(appName string) {
 	accesslog.appName = appName
 }
 
-func Info(durationMs int, status int, requestPath string, requestMethod string, requestId string) {
-	accesslog.Info(durationMs, status, requestPath, requestMethod, requestId)
+func Info(durationMs int, status int, requestPath string, requestMethod string, requestId string, userId string) {
+	accesslog.Info(durationMs, status, requestPath, requestMethod, requestId, userId)
 }
 
 func GetLogger() *AccessLogger {
@@ -28,11 +28,11 @@ func NewAccessLogger(appName string) *AccessLogger {
 	return &AccessLogger{appName: appName}
 }
 
-func (al *AccessLogger) Info(durationMs int, status int, requestPath string, requestMethod string, requestId string) {
+func (al *AccessLogger) Info(durationMs int, status int, requestPath string, requestMethod string, requestId string, userId string) {
 	logLevel := "INFO"
 	logType := "ACCESS"
 
-	entry := newAccessLog(logLevel, logType, durationMs, status, requestPath, requestMethod, requestId, al.appName)
+	entry := newAccessLog(logLevel, logType, durationMs, status, requestPath, requestMethod, requestId, al.appName, userId)
 	jsonEntry, err := json.Marshal(entry)
 	if err != nil {
 		log.Println(err.Error())
@@ -50,9 +50,10 @@ type accessLog struct {
 	RequestPath   string `json:"request_path"`
 	RequestMethod string `json:"request_method"`
 	RequestId     string `json:"request_id"`
+	UserId        string `json:"user_id"`
 }
 
-func newAccessLog(logLevel string, logType string, durationMs int, status int, requestPath string, requestMethod string, requestId string, appName string) *accessLog {
+func newAccessLog(logLevel string, logType string, durationMs int, status int, requestPath string, requestMethod string, requestId string, appName string, userId string) *accessLog {
 	currentTime := time.Now()
 	return &accessLog{
 		Timestamp:     currentTime.Format("2006-01-02T15:04:05.000-07:00"),
@@ -64,5 +65,6 @@ func newAccessLog(logLevel string, logType string, durationMs int, status int, r
 		RequestMethod: requestMethod,
 		RequestId:     requestId,
 		AppName:       appName,
+		UserId:        userId,
 	}
 }
