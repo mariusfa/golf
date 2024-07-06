@@ -12,8 +12,8 @@ func SetAppName(appName string) {
 	accesslog.appName = appName
 }
 
-func Info(durationMs int, status int, requestPath string, requestMethod string) {
-	accesslog.Info(durationMs, status, requestPath, requestMethod)
+func Info(durationMs int, status int, requestPath string, requestMethod string, requestId string) {
+	accesslog.Info(durationMs, status, requestPath, requestMethod, requestId)
 }
 
 func GetLogger() *AccessLogger {
@@ -28,11 +28,11 @@ func NewAccessLogger(appName string) *AccessLogger {
 	return &AccessLogger{appName: appName}
 }
 
-func (al *AccessLogger) Info(durationMs int, status int, requestPath string, requestMethod string) {
+func (al *AccessLogger) Info(durationMs int, status int, requestPath string, requestMethod string, requestId string) {
 	logLevel := "INFO"
 	logType := "ACCESS"
 
-	entry := newAccessLog(logLevel, logType, durationMs, status, requestPath, requestMethod, al.appName)
+	entry := newAccessLog(logLevel, logType, durationMs, status, requestPath, requestMethod, requestId, al.appName)
 	jsonEntry, err := json.Marshal(entry)
 	if err != nil {
 		log.Println(err.Error())
@@ -49,9 +49,10 @@ type accessLog struct {
 	Status        int    `json:"status"`
 	RequestPath   string `json:"request_path"`
 	RequestMethod string `json:"request_method"`
+	RequestId     string `json:"request_id"`
 }
 
-func newAccessLog(logLevel string, logType string, durationMs int, status int, requestPath string, requestMethod string, appName string) *accessLog {
+func newAccessLog(logLevel string, logType string, durationMs int, status int, requestPath string, requestMethod string, requestId string, appName string) *accessLog {
 	currentTime := time.Now()
 	return &accessLog{
 		Timestamp:     currentTime.Format("2006-01-02T15:04:05.000-07:00"),
@@ -61,6 +62,7 @@ func newAccessLog(logLevel string, logType string, durationMs int, status int, r
 		Status:        status,
 		RequestPath:   requestPath,
 		RequestMethod: requestMethod,
+		RequestId:     requestId,
 		AppName:       appName,
 	}
 }

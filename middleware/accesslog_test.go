@@ -11,13 +11,15 @@ type fakeAccessLogger struct {
 	Status        int
 	RequestPath   string
 	RequestMethod string
+	RequestId     string
 }
 
-func (fal *fakeAccessLogger) Info(durationMs int, status int, requestPath string, requestMethod string) {
+func (fal *fakeAccessLogger) Info(durationMs int, status int, requestPath string, requestMethod string, requestId string) {
 	fal.DurationMs = durationMs
 	fal.Status = status
 	fal.RequestPath = requestPath
 	fal.RequestMethod = requestMethod
+	fal.RequestId = requestId
 }
 
 func helloAccessHandler() http.Handler {
