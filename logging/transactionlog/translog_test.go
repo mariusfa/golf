@@ -7,6 +7,6 @@ import (
 )
 
 func TestTransLoggerInHttpClient(t *testing.T) {
-	TransLog := NewTransLogger("test")
-	_ = httpclient.NewHttpClient(TransLog)
+	translog := GetLogger()
+	_ = httpclient.NewHttpClient(translog)
 }

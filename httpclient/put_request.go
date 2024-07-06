@@ -11,6 +11,7 @@ import (
 
 type PutRequest struct {
 	RequestId string
+	UserId    string
 	Headers   map[string]string
 	Url       string
 	Body      any
@@ -48,37 +49,37 @@ func (c *HttpClient) putJsonPlain(request *PutRequest, responseDto any) error {
 	for key, value := range request.Headers {
 		req.Header.Set(key, value)
 	}
-	c.logger.RequestInfo(request.RequestId, "PUT", request.Url, string(body))
+	c.logger.RequestInfo(request.RequestId, "PUT", request.Url, string(body), request.UserId)
 	start := time.Now()
 	resp, err := c.client.Do(req)
 	duratonMs := time.Since(start).Milliseconds()
 	if err != nil {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), 0, "")
+		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), 0, "", request.UserId)
 		return fmt.Errorf("failed to do request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
+		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "", request.UserId)
 		return fmt.Errorf("%s from %s", resp.Status, request.Url)
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
+		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "", request.UserId)
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	if len(bodyBytes) == 0 {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
+		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "", request.UserId)
 		return nil
 	}
 
 	if err = json.Unmarshal(bodyBytes, responseDto); err != nil {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, string(bodyBytes))
+		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, string(bodyBytes), request.UserId)
 		return fmt.Errorf("failed to unmarshal response body: %w", err)
 	}
 
-	c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, string(bodyBytes))
+	c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, string(bodyBytes), request.UserId)
 	return nil
 }

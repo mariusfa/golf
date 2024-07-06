@@ -8,6 +8,7 @@ import (
 
 type DeleteRequest struct {
 	RequestId string
+	UserId    string
 	Headers   map[string]string
 	Url       string
 }
@@ -40,22 +41,22 @@ func (c *HttpClient) deletePlain(request *DeleteRequest) error {
 	for key, value := range request.Headers {
 		req.Header.Set(key, value)
 	}
-	c.logger.RequestInfo(request.RequestId, "DELETE", request.Url, "")
+	c.logger.RequestInfo(request.RequestId, "DELETE", request.Url, "", request.UserId)
 	start := time.Now()
 	resp, err := c.client.Do(req)
 	duratonMs := time.Since(start).Milliseconds()
 	if err != nil {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), 0, "")
+		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), 0, "", request.UserId)
 		return fmt.Errorf("failed to do request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
+		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "", request.UserId)
 		return fmt.Errorf("%s from %s", resp.Status, request.Url)
 	}
 
-	c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
+	c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "", request.UserId)
 
 	return nil
 }

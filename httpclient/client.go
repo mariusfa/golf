@@ -9,8 +9,8 @@ import (
 )
 
 type logger interface {
-	RequestInfo(requestId string, requestMethod string, requestPath string, requestBody string)
-	ResponseInfo(requestId string, durationMs string, status int, responseBody string)
+	RequestInfo(requestId string, requestMethod string, requestPath string, requestBody string, userId string)
+	ResponseInfo(requestId string, durationMs string, status int, responseBody string, userId string)
 }
 
 type HttpClient struct {

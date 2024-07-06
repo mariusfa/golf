@@ -11,6 +11,7 @@ import (
 
 type GetRequest struct {
 	RequestId string
+	UserId    string
 	Headers   map[string]string
 	Url       string
 }
@@ -43,30 +44,30 @@ func (c *HttpClient) getJsonPlain(request *GetRequest, dto any) error {
 	for key, value := range request.Headers {
 		req.Header.Set(key, value)
 	}
-	c.logger.RequestInfo(request.RequestId, "GET", request.Url, "")
+	c.logger.RequestInfo(request.RequestId, "GET", request.Url, "", request.UserId)
 	start := time.Now()
 	resp, err := c.client.Do(req)
 	duratonMs := time.Since(start).Milliseconds()
 	if err != nil {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), 0, "")
+		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), 0, "", request.UserId)
 		return fmt.Errorf("failed to do request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
+		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "", request.UserId)
 		return fmt.Errorf("%s from %s", resp.Status, request.Url)
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "")
+		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "", request.UserId)
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	bodyString := string(bodyBytes)
 
-	c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, bodyString)
+	c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, bodyString, request.UserId)
 
 	bodyReader := bytes.NewReader(bodyBytes)
 
