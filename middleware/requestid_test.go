@@ -33,3 +33,23 @@ func TestGetRequestIdFromIncomingHeader(t *testing.T) {
 		t.Errorf("handler returned unexpected body: got %v want %v", body, "123")
 	}
 }
+
+func TestGenerateRequestIdIfNotProvided(t *testing.T) {
+	handler := requestIdHandler()
+	handlerWithMiddleware := RequestIdMiddleware(handler)
+
+	router := http.NewServeMux()
+	router.Handle("/request", handlerWithMiddleware)
+
+	req := httptest.NewRequest("GET", "/request", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if status := w.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	if body := w.Body.String(); body == "" {
+		t.Errorf("handler returned empty body")
+	}
+}

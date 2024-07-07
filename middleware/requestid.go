@@ -1,10 +1,18 @@
 package middleware
 
-import "net/http"
+import (
+	"net/http"
 
-func RequestIdMiddleware(next http.Handler, logger AccessLoggerPort) http.Handler {
+	"github.com/google/uuid"
+)
+
+func RequestIdMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO
+		requestId := r.Header.Get("X-Request-Id")
+		if requestId == "" {
+			requestId = uuid.New().String()
+		}
+		r.Header.Set("X-Request-Id", requestId)
 		next.ServeHTTP(w, r)
 	})
 }
