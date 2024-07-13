@@ -63,3 +63,7 @@ func TestAccessMiddleware(t *testing.T) {
 		t.Errorf("loggerFake.DurationMs is less than 0")
 	}
 }
+
+func TestAccessMiddlewareWithSettingUser(t *testing.T) {
+	t.Errorf("not implemented")
+}

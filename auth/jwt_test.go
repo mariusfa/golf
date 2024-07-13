@@ -38,7 +38,7 @@ func TestExpiredToken(t *testing.T) {
 	secret := "secret"
 
 	expires := time.Now().Add(-24 * time.Hour)
-	
+
 	token, err := CreateToken("user", secret, &expires)
 	if err != nil {
 		t.Errorf("Error creating token: %s", err)

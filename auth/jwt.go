@@ -7,10 +7,6 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-// TODO: implement jwt.go
-
-// use jwt for authentication
-
 type UserClaims struct {
 	UserId string `json:"userId"`
 	jwt.RegisteredClaims
