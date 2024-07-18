@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/mariusfa/golf/auth"
 )
 
 type fakeAccessLogger struct {
@@ -27,6 +29,16 @@ func (fal *fakeAccessLogger) Info(durationMs int, status int, requestPath string
 func helloAccessHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("hello"))
+	})
+}
+
+func setDummyUserContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		ctxValue := ctx.Value(UserKey)
+		userContext := ctxValue.(*auth.UserContext)
+		userContext.Id = "dummy"
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -61,6 +73,25 @@ func TestAccessMiddleware(t *testing.T) {
 	}
 	if loggerFake.DurationMs < 0 {
 		t.Errorf("loggerFake.DurationMs is less than 0")
+	}
+}
+
+func TestAccessMiddlwareWithDummyUser(t *testing.T) {
+	loggerFake := &fakeAccessLogger{}
+
+	handler := helloAccessHandler()
+	handler = setDummyUserContext(handler)
+	handlerWithMiddleware := AccessLogMiddleware(handler, loggerFake)
+
+	router := http.NewServeMux()
+	router.Handle("/hello", handlerWithMiddleware)
+
+	req, _ := http.NewRequest("GET", "/hello", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if loggerFake.UserId != "dummy" {
+		t.Errorf("loggerFake.UserId is not dummy")
 	}
 }
 

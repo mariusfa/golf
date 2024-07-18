@@ -1,8 +1,11 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"time"
+
+	"github.com/mariusfa/golf/auth"
 )
 
 type customResponseWriter struct {
@@ -24,13 +27,15 @@ func AccessLogMiddleware(next http.Handler, logger AccessLoggerPort) http.Handle
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		crw := newCustomedResponseWriter(w)
+		ctx := r.Context()
+		userContext := &auth.UserContext{Id: ""}
+		ctx = context.WithValue(ctx, UserKey, userContext)
 
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(ctx))
 
 		durationMs := time.Since(start).Milliseconds()
 		requestId := r.Header.Get("X-Request-Id")
-		userId := ""
-		logger.Info(int(durationMs), crw.status, r.URL.Path, r.Method, requestId, userId)
+		logger.Info(int(durationMs), crw.status, r.URL.Path, r.Method, requestId, userContext.Id)
 	})
 }
 
