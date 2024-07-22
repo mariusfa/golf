@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/mariusfa/golf/auth"
 )
@@ -27,6 +28,13 @@ func Auth(next http.Handler, params AuthParams) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			params.Logger.Error("Missing Authorization header", requestId)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			params.Logger.Error("Invalid Authorization header", requestId)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
