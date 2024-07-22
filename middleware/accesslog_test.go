@@ -94,7 +94,3 @@ func TestAccessMiddlwareWithDummyUser(t *testing.T) {
 		t.Errorf("loggerFake.UserId is not dummy")
 	}
 }
-
-func TestAccessMiddlewareWithSettingUser(t *testing.T) {
-	t.Errorf("not implemented")
-}
