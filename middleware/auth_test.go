@@ -33,6 +33,9 @@ type fakeLogger struct {
 func (fl *fakeLogger) Info(message string, requestId string) { fl.InfoMessage = message }
 func (fl *fakeLogger) Error(message string, requestId string) { fl.ErrorMessage = message }
 
+func TestFindUser(t *testing.T) {
+	t.Errorf("Test not implemented")
+}
 
 func TestMissingHeader(t *testing.T) {
 	fakeLogger := &fakeLogger{}
