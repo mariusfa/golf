@@ -89,6 +89,9 @@ func TestMissingBearerString(t *testing.T) {
 	}
 }
 
+func TestMalformedHeader(t *testing.T) {
+	t.Errorf("Test not implemented")
+}
 
 func TestInvalidToken(t *testing.T) {
 	t.Errorf("Test not implemented")
