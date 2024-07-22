@@ -53,7 +53,7 @@ func TestMissingHeader(t *testing.T) {
 	}
 
 	if fakeLogger.ErrorMessage != "Missing Authorization header" {
-		t.Errorf("authParams.Logger.ErrorMesasge is not 'Missing Authorization header'")
+		t.Errorf("authParams.Logger.ErrorMessage is not 'Missing Authorization header'")
 	}
 
 	if fakeLogger.InfoMessage != "" {
@@ -62,8 +62,33 @@ func TestMissingHeader(t *testing.T) {
 }
 
 func TestMissingBearerString(t *testing.T) {
-	t.Errorf("Test not implemented")
+	fakeLogger := &fakeLogger{}
+	authParams := NewAuthParams("secret", &fakeUserRepository{}, fakeLogger)
+	handler := helloAuthHandler()
+	handlerWithMiddleware := Auth(handler, authParams)
+
+	router := http.NewServeMux()
+	router.Handle("/hello", handlerWithMiddleware)
+
+	req := httptest.NewRequest("GET", "/hello", nil)
+	req.Header.Set("Authorization", "Bearer ")
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	if status := w.Code; status != http.StatusUnauthorized {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusUnauthorized)
+	}
+
+	if fakeLogger.ErrorMessage != "Missing token" {
+		t.Errorf("authParams.Logger.ErrorMessage is not 'Missing token'")
+	}
+
+	if fakeLogger.InfoMessage != "" {
+		t.Errorf("authParams.Logger.InfoMessage is not empty")
+	}
 }
+
 
 func TestInvalidToken(t *testing.T) {
 	t.Errorf("Test not implemented")
