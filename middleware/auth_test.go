@@ -37,7 +37,7 @@ func (fl *fakeLogger) Error(message string, requestId string) { fl.ErrorMessage 
 
 func TestFindUser(t *testing.T) {
 	fakeLogger := &fakeLogger{}
-	fakeUesrRepo := &fakeUserRepository{
+	fakeUserRepo := &fakeUserRepository{
 		UserList: map[string]*User{
 			"123": {Id: "123", Name: "John"},
 		},
@@ -45,7 +45,7 @@ func TestFindUser(t *testing.T) {
 	token, _ := auth.CreateToken("123", "secret", nil)
 	headerValue := "Bearer " + token
 
-	authParams := NewAuthParams("secret", fakeUesrRepo, fakeLogger)
+	authParams := NewAuthParams("secret", fakeUserRepo, fakeLogger)
 	handler := helloAuthHandler()
 	handlerWithMiddleware := Auth(handler, authParams)
 
@@ -192,7 +192,7 @@ func TestInvalidToken(t *testing.T) {
 
 func TestMissingUser(t *testing.T) {
 	fakeLogger := &fakeLogger{}
-	fakeUesrRepo := &fakeUserRepository{
+	fakeUserRepo := &fakeUserRepository{
 		UserList: map[string]*User{
 			"123": {Id: "123", Name: "John"},
 		},
@@ -200,7 +200,7 @@ func TestMissingUser(t *testing.T) {
 	token, _ := auth.CreateToken("1234", "secret", nil)
 	headerValue := "Bearer " + token
 
-	authParams := NewAuthParams("secret", fakeUesrRepo, fakeLogger)
+	authParams := NewAuthParams("secret", fakeUserRepo, fakeLogger)
 	handler := helloAuthHandler()
 	handlerWithMiddleware := Auth(handler, authParams)
 
