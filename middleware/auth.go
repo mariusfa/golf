@@ -32,7 +32,6 @@ func Auth(next http.Handler, params AuthParams) http.Handler {
 			return
 		}
 
-		
 		if !strings.HasPrefix(authHeader, "Bearer ") {
 			params.Logger.Error("Invalid Authorization header", requestId)
 			w.WriteHeader(http.StatusUnauthorized)

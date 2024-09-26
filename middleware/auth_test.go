@@ -32,7 +32,7 @@ type fakeLogger struct {
 	ErrorMessage string
 }
 
-func (fl *fakeLogger) Info(message string, requestId string) { fl.InfoMessage = message }
+func (fl *fakeLogger) Info(message string, requestId string)  { fl.InfoMessage = message }
 func (fl *fakeLogger) Error(message string, requestId string) { fl.ErrorMessage = message }
 
 func TestFindUser(t *testing.T) {
@@ -155,7 +155,39 @@ func TestMalformedHeader(t *testing.T) {
 }
 
 func TestInvalidToken(t *testing.T) {
-	t.Errorf("Test not implemented")
+	fakeLogger := &fakeLogger{}
+	fakeUserRepo := &fakeUserRepository{
+		UserList: map[string]*User{
+			"123": {Id: "123", Name: "John"},
+		},
+	}
+	token := "123"
+	headerValue := "Bearer " + token
+
+	authParams := NewAuthParams("secret", fakeUserRepo, fakeLogger)
+	handler := helloAuthHandler()
+	handlerWithMiddleware := Auth(handler, authParams)
+
+	router := http.NewServeMux()
+	router.Handle("/hello", handlerWithMiddleware)
+
+	req := httptest.NewRequest("GET", "/hello", nil)
+	req.Header.Set("Authorization", headerValue)
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("handler returned wrong status code: got %v want %v", w.Code, http.StatusUnauthorized)
+	}
+
+	if fakeLogger.ErrorMessage != "Error parsing token" {
+		t.Errorf("authParams.Logger.ErrorMessage is not empty")
+	}
+
+	if fakeLogger.InfoMessage != "" {
+		t.Errorf("authParams.Logger.InfoMessage is not empty")
+	}
 }
 
 func TestMissingUser(t *testing.T) {
