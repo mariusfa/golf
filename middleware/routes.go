@@ -12,3 +12,9 @@ func privateRoute(endpoint http.Handler, authParams AuthParams) http.Handler {
 	middlewareWrapper = AccessLogMiddleware(middlewareWrapper, accesslog.GetLogger())
 	return middlewareWrapper
 }
+
+func publicRoute(endpoint http.Handler) http.Handler {
+	middlewareWrapper := RequestIdMiddleware(endpoint)
+	middlewareWrapper = AccessLogMiddleware(middlewareWrapper, accesslog.GetLogger())
+	return middlewareWrapper
+}
