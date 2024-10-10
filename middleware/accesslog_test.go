@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/mariusfa/golf/auth"
+	"github.com/mariusfa/golf/logging/accesslog"
 )
 
 type fakeAccessLogger struct {
@@ -93,4 +94,9 @@ func TestAccessMiddlwareWithDummyUser(t *testing.T) {
 	if loggerFake.UserId != "dummy" {
 		t.Errorf("loggerFake.UserId is not dummy")
 	}
+}
+
+func TestAccesslogInMiddleware(t *testing.T) {
+	accesslog.SetAppName("test")
+	AccessLogMiddleware(nil, accesslog.GetLogger())
 }
