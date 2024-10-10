@@ -28,6 +28,10 @@ func NewTraceLogger(appName string) *TraceLogger {
 	return &TraceLogger{appName: appName}
 }
 
+func GetLogger() *TraceLogger {
+	return tracelogger
+}
+
 func (tl *TraceLogger) Info(payload string, userId string, requestId string) {
 	logLevel := "INFO"
 	logType := "TRACE"
