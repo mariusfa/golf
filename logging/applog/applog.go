@@ -1,57 +1,46 @@
 package applog
 
 import (
-	"encoding/json"
-	"log"
-	"time"
+	"fmt"
+	"log/slog"
+	"os"
+
+	"github.com/mariusfa/golf/logging/utils"
 )
 
-var applogger = NewAppLogger("")
+var applogger = newAppLogger("APP_NAME_NOT_SET")
+
+func newAppLogger(appName string) *slog.Logger {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		ReplaceAttr: utils.ReplaceDefaultKeys,
+	}))
+	return logger.With(
+		slog.String("app_name", appName),
+		slog.String("log_type", "APP"),
+	)
+}
 
 func SetAppName(appName string) {
-	applogger.appName = appName
+	applogger = newAppLogger(appName)
 }
 
 func Info(payload string) {
 	applogger.Info(payload)
 }
 
-type AppLogger struct {
-	appName string
-}
-
-func NewAppLogger(appName string) *AppLogger {
-	log.SetFlags(0)
-	return &AppLogger{appName: appName}
-}
-
-func (al *AppLogger) Info(payload string) {
-	logLevel := "INFO"
-	logType := "APP"
-
-	entry := newAppLog(logLevel, logType, payload, al.appName)
-	jsonEntry, err := json.Marshal(entry)
-	if err != nil {
-		log.Println(err.Error())
+func Infof(format string, v ...any) {
+	payload := format
+	if len(v) > 0 {
+		payload = fmt.Sprintf(format, v...)
 	}
-	log.Println(string(jsonEntry))
+
+	Info(payload)
 }
 
-type appLog struct {
-	Timestamp string `json:"timestamp"`
-	LogLevel  string `json:"log_level"`
-	LogType   string `json:"log_type"`
-	AppName   string `json:"app_name"`
-	Payload   string `json:"payload"`
+func Error(payload string) {
+	applogger.Error(payload)
 }
 
-func newAppLog(logLevel string, logType string, payload string, appName string) *appLog {
-	currentTime := time.Now()
-	return &appLog{
-		Timestamp: currentTime.Format("2006-01-02T15:04:05.000-07:00"),
-		LogLevel:  logLevel,
-		LogType:   logType,
-		Payload:   payload,
-		AppName:   appName,
-	}
+func Errorf(payload string, error error) {
+	applogger.Error(payload, slog.Any("error", error))
 }
