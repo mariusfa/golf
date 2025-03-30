@@ -1,6 +1,9 @@
 package utils
 
-import "log/slog"
+import (
+	"log/slog"
+	"os"
+)
 
 func ReplaceDefaultKeys(groups []string, attr slog.Attr) slog.Attr {
 	switch attr.Key {
@@ -13,4 +16,10 @@ func ReplaceDefaultKeys(groups []string, attr slog.Attr) slog.Attr {
 	default:
 		return attr
 	}
+}
+
+func NewSlogger() *slog.Logger {
+	return slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		ReplaceAttr: ReplaceDefaultKeys,
+	}))
 }

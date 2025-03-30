@@ -1,80 +1,62 @@
 package tracelog
 
 import (
-	"encoding/json"
-	"log"
-	"time"
+	"context"
+	"fmt"
+	"log/slog"
+
+	"github.com/mariusfa/golf/logging/utils"
 )
 
-var tracelogger = NewTraceLogger("")
+var tracelogger = NewTraceLogger("APP_NAME_NOT_SET")
+
+func NewTraceLogger(appName string) *slog.Logger {
+	logger := utils.NewSlogger()
+	return logger.With(
+		slog.String("app_name", appName),
+		slog.String("log_type", "TRACE"),
+	)
+}
 
 func SetAppName(appName string) {
-	tracelogger.appName = appName
+	tracelogger = NewTraceLogger(appName)
 }
 
-func Info(payload string, userId string, requestId string) {
-	tracelogger.Info(payload, userId, requestId)
+func Info(ctx context.Context, payload string) {
+	username, requestId := utils.ExtractFromContext(ctx)
+
+	tracelogger.Info(
+		payload,
+		slog.String("username", username),
+		slog.String("request_id", requestId),
+	)
 }
 
-func Error(payload string, userId string, requestId string) {
-	tracelogger.Error(payload, userId, requestId)
-}
-
-type TraceLogger struct {
-	appName string
-}
-
-func NewTraceLogger(appName string) *TraceLogger {
-	return &TraceLogger{appName: appName}
-}
-
-func GetLogger() *TraceLogger {
-	return tracelogger
-}
-
-func (tl *TraceLogger) Info(payload string, userId string, requestId string) {
-	logLevel := "INFO"
-	logType := "TRACE"
-
-	entry := newTraceLog(logLevel, logType, payload, tl.appName, userId, requestId)
-	jsonEntry, err := json.Marshal(entry)
-	if err != nil {
-		log.Println(err.Error())
+func Infof(ctx context.Context, format string, v ...any) {
+	payload := format
+	if len(v) > 0 {
+		payload = fmt.Sprintf(format, v...)
 	}
-	log.Println(string(jsonEntry))
+	Info(ctx, payload)
 }
 
-func (tl *TraceLogger) Error(payload string, userId string, requestId string) {
-	logLevel := "ERROR"
-	logType := "TRACE"
+func Errorf(ctx context.Context, payload string, err error) {
+	username, requestid := utils.ExtractFromContext(ctx)
 
-	entry := newTraceLog(logLevel, logType, payload, tl.appName, userId, requestId)
-	jsonEntry, err := json.Marshal(entry)
-	if err != nil {
-		log.Println(err.Error())
-	}
-	log.Println(string(jsonEntry))
+	tracelogger.Error(
+		payload,
+		slog.String("username", username),
+		slog.String("request_id", requestid),
+		slog.Any("error", err),
+	)
 }
 
-type traceLog struct {
-	Timestamp string `json:"timestamp"`
-	LogLevel  string `json:"log_level"`
-	LogType   string `json:"log_type"`
-	AppName   string `json:"app_name"`
-	Payload   string `json:"payload"`
-	UserId    string `json:"user_id"`
-	RequestId string `json:"request_id"`
-}
+func Error(ctx context.Context, payload string) {
+	username, requestid := utils.ExtractFromContext(ctx)
 
-func newTraceLog(logLevel string, logType string, payload string, appName string, userId string, requestId string) *traceLog {
-	currentTime := time.Now()
-	return &traceLog{
-		Timestamp: currentTime.Format("2006-01-02T15:04:05.000-07:00"),
-		LogLevel:  logLevel,
-		LogType:   logType,
-		Payload:   payload,
-		AppName:   appName,
-		UserId:    userId,
-		RequestId: requestId,
-	}
+	tracelogger.Error(
+		payload,
+		slog.String("username", username),
+		slog.String("request_id", requestid),
+	)
 }

@@ -3,7 +3,6 @@ package applog
 import (
 	"fmt"
 	"log/slog"
-	"os"
 
 	"github.com/mariusfa/golf/logging/utils"
 )
@@ -11,9 +10,7 @@ import (
 var applogger = newAppLogger("APP_NAME_NOT_SET")
 
 func newAppLogger(appName string) *slog.Logger {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		ReplaceAttr: utils.ReplaceDefaultKeys,
-	}))
+	logger := utils.NewSlogger()
 	return logger.With(
 		slog.String("app_name", appName),
 		slog.String("log_type", "APP"),
