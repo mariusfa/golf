@@ -1,6 +1,8 @@
 package httpclient
 
 import (
+	"context"
+	"net/http"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -10,39 +12,23 @@ func TestPutJsonObject(t *testing.T) {
 	// Test without response body
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("PUT", "http://localhost:8080", httpmock.NewStringResponder(204, ""))
-	fakeLogger := &fakeLogger{}
+	httpmock.RegisterResponder("PUT", "http://localhost:8080",
+		func(h *http.Request) (*http.Response, error) {
+			if h.Header.Get("Content-Type") != "application/json" {
+				t.Errorf("Expected Content-Type application/json, got %s", h.Header.Get("Content-Type"))
+			}
 
-	client := NewHttpClient(fakeLogger)
-	requestDto := MyDto{Name: "Crazy Test"}
+			return httpmock.NewStringResponse(200, ""), nil
+		})
 
-	requestId := "test"
-	url := "http://localhost:8080"
 	headers := map[string]string{"Content-Type": "application/json"}
+	putRequest := NewPutRequest(headers, "http://localhost:8080", MyDto{Name: "Crazy Test"})
+	ctx := context.Background()
 
-	putRequest := NewPutRequest(requestId, headers, url, requestDto)
-	err := client.PutJson(putRequest, nil)
+	err := NewHttpClient().PutJson(ctx, putRequest, nil)
 
 	if err != nil {
 		t.Errorf("Expected nil, got %v", err)
-	}
-	if fakeLogger.RequestId == "" {
-		t.Errorf("fakeLogger.RequestId is empty")
-	}
-	if fakeLogger.RequestPath != "http://localhost:8080" {
-		t.Errorf("Expected http://localhost:8080, got %v", fakeLogger.RequestPath)
-	}
-	if fakeLogger.RequestMethod != "PUT" {
-		t.Errorf("Expected PUT, got %v", fakeLogger.RequestMethod)
-	}
-	if fakeLogger.DurationMs == "" {
-		t.Errorf("fakeLogger.DurationMs is empty")
-	}
-	if fakeLogger.Status != 204 {
-		t.Errorf("Expected 204, got %v", fakeLogger.Status)
-	}
-	if fakeLogger.RequestBody == "" {
-		t.Errorf("fakeLogger.RequestBody is empty")
 	}
 }
 
@@ -50,45 +36,24 @@ func TestPutJsonObjectWithResponse(t *testing.T) {
 	// Test with response body
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("PUT", "http://localhost:8080", httpmock.NewJsonResponderOrPanic(201, MyDto{Name: "Crazy Test"}))
-	fakeLogger := &fakeLogger{}
+	httpmock.RegisterResponder("PUT", "http://localhost:8080",
+		func(h *http.Request) (*http.Response, error) {
+			if h.Header.Get("Content-Type") != "application/json" {
+				t.Errorf("Expected Content-Type application/json, got %s", h.Header.Get("Content-Type"))
+			}
 
-	client := NewHttpClient(fakeLogger)
-	requestDto := MyDto{Name: "Crazy Test"}
+			return httpmock.NewJsonResponse(200, MyDto{Name: "Hello!"})
+		})
 
-	requestId := "test"
-	url := "http://localhost:8080"
 	headers := map[string]string{"Content-Type": "application/json"}
-
 	var responseDto MyDto
-	putRequest := NewPutRequest(requestId, headers, url, requestDto)
-	err := client.PutJson(putRequest, &responseDto)
+	putRequest := NewPutRequest(headers, "http://localhost:8080", MyDto{Name: "Crazy Test"})
+	err := NewHttpClient().PutJson(context.Background(), putRequest, &responseDto)
 
 	if err != nil {
 		t.Errorf("Expected nil, got %v", err)
 	}
-	if fakeLogger.RequestId == "" {
-		t.Errorf("fakeLogger.RequestId is empty")
-	}
-	if fakeLogger.RequestPath != "http://localhost:8080" {
-		t.Errorf("Expected http://localhost:8080, got %v", fakeLogger.RequestPath)
-	}
-	if fakeLogger.RequestMethod != "PUT" {
-		t.Errorf("Expected PUT, got %v", fakeLogger.RequestMethod)
-	}
-	if fakeLogger.DurationMs == "" {
-		t.Errorf("fakeLogger.DurationMs is empty")
-	}
-	if fakeLogger.Status != 201 {
-		t.Errorf("Expected 201, got %v", fakeLogger.Status)
-	}
-	if fakeLogger.RequestBody == "" {
-		t.Errorf("fakeLogger.RequestBody is empty")
-	}
-	if fakeLogger.ResponseBody == "" {
-		t.Errorf("fakeLogger.ResponseBody is empty")
-	}
-	if responseDto.Name != "Crazy Test" {
+	if responseDto.Name != "Hello!" {
 		t.Errorf("Expected Crazy Test, got %v", responseDto.Name)
 	}
 }
