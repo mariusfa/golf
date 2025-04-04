@@ -32,7 +32,7 @@ func TestTraceLog_Context(t *testing.T) {
 	if !strings.Contains(output, expected) {
 		t.Errorf("Expected output to contain %q, but was not found. Ouput: %q", expected, output)
 	}
-	expected = "\"username\":\"test_username\""
+	expected = "\"user_id\":\"test_username\""
 	if !strings.Contains(output, expected) {
 		t.Errorf("Expected output to contain %q, but was not found. Ouput: %q", expected, output)
 	}
@@ -48,7 +48,7 @@ func TestTraceLog_MissingContext(t *testing.T) {
 	if !strings.Contains(output, expected) {
 		t.Errorf("Expected output to contain %q, but was not found. Ouput: %q", expected, output)
 	}
-	expected = "\"username\":\"\""
+	expected = "\"user_id\":\"\""
 	if !strings.Contains(output, expected) {
 		t.Errorf("Expected output to contain %q, but was not found. Ouput: %q", expected, output)
 	}

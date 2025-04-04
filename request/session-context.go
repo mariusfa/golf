@@ -1,6 +1,8 @@
 package request
 
-import "github.com/mariusfa/golf/auth"
+import (
+	"github.com/mariusfa/golf/auth"
+)
 
 type SessionCtx struct {
 	Id       string

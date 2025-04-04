@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -10,18 +11,17 @@ import (
 func TestGetJsonObject(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "http://localhost:8080", httpmock.NewJsonResponderOrPanic(http.StatusOK, httpmock.File("./mocks/name.json")))
-
-	fakeLogger := &fakeLogger{}
-
-	client := NewHttpClient(fakeLogger)
+	httpmock.RegisterResponder("GET", "http://localhost:8080",
+		func(request *http.Request) (*http.Response, error) {
+			if request.Header.Get("Accept") != "application/json" {
+				t.Errorf("Expected application/json, got %v", request.Header.Get("Accept"))
+			}
+			return httpmock.NewJsonResponse(http.StatusOK, httpmock.File("./mocks/name.json"))
+		})
 	var dto MyDto
-
-	requestId := "test"
-	url := "http://localhost:8080"
 	headers := map[string]string{"Accept": "application/json"}
-	getRequest := NewGetRequest(requestId, headers, url)
-	err := client.GetJson(getRequest, &dto)
+	getRequest := NewGetRequest(headers, "http://localhost:8080")
+	err := NewHttpClient().GetJson(context.Background(), getRequest, &dto)
 
 	if err != nil {
 		t.Errorf("Expected nil, got %v", err)
@@ -29,44 +29,21 @@ func TestGetJsonObject(t *testing.T) {
 	if dto.Name != "Crazy Test" {
 		t.Errorf("Expected Crazy Test, got %v", dto.Name)
 	}
-
-	if fakeLogger.RequestId == "" {
-		t.Errorf("fakeLogger.RequestId is empty")
-	}
-	if fakeLogger.RequestPath != "http://localhost:8080" {
-		t.Errorf("Expected http://localhost:8080, got %v", fakeLogger.RequestPath)
-	}
-	if fakeLogger.RequestMethod != "GET" {
-		t.Errorf("Expected GET, got %v", fakeLogger.RequestMethod)
-	}
-
-	if fakeLogger.DurationMs == "" {
-		t.Errorf("fakeLogger.DurationMs is empty")
-	}
-	if fakeLogger.Status != http.StatusOK {
-		t.Errorf("Expected %v, got %v", http.StatusOK, fakeLogger.Status)
-	}
-	if fakeLogger.ResponseBody == "" {
-		t.Errorf("fakeLogger.ResponseBody is empty")
-	}
 }
 
 func TestGetJsonList(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "http://localhost:8080", httpmock.NewJsonResponderOrPanic(http.StatusOK, httpmock.File("./mocks/names.json")))
+	httpmock.RegisterResponder(
+		"GET",
+		"http://localhost:8080",
+		httpmock.NewJsonResponderOrPanic(http.StatusOK, httpmock.File("./mocks/names.json")))
 
-	fakeLogger := &fakeLogger{}
-
-	client := NewHttpClient(fakeLogger)
 	var dto []MyDto
 
-	requestId := "test"
-
-	url := "http://localhost:8080"
 	headers := map[string]string{"Accept": "application/json"}
-	getRequest := NewGetRequest(requestId, headers, url)
-	err := client.GetJson(getRequest, &dto)
+	getRequest := NewGetRequest(headers, "http://localhost:8080")
+	err := NewHttpClient().GetJson(context.Background(), getRequest, &dto)
 
 	if err != nil {
 		t.Errorf("Expected nil, got %v", err)
@@ -79,25 +56,5 @@ func TestGetJsonList(t *testing.T) {
 	}
 	if dto[1].Name != "Crazy Test 2" {
 		t.Errorf("Expected Crazy Test 2, got %v", dto[1].Name)
-	}
-
-	if fakeLogger.RequestId == "" {
-		t.Errorf("fakeLogger.RequestId is empty")
-	}
-	if fakeLogger.RequestPath != "http://localhost:8080" {
-		t.Errorf("Expected http://localhost:8080, got %v", fakeLogger.RequestPath)
-	}
-	if fakeLogger.RequestMethod != "GET" {
-		t.Errorf("Expected GET, got %v", fakeLogger.RequestMethod)
-	}
-
-	if fakeLogger.DurationMs == "" {
-		t.Errorf("fakeLogger.DurationMs is empty")
-	}
-	if fakeLogger.Status != http.StatusOK {
-		t.Errorf("Expected %v, got %v", http.StatusOK, fakeLogger.Status)
-	}
-	if fakeLogger.ResponseBody == "" {
-		t.Errorf("fakeLogger.ResponseBody is empty")
 	}
 }
