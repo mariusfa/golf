@@ -7,9 +7,9 @@ import (
 	"github.com/mariusfa/golf/logging/utils"
 )
 
-var applogger = newAppLogger("APP_NAME_NOT_SET")
+var appLogger = NewAppLogger("APP_NAME_NOT_SET")
 
-func newAppLogger(appName string) *slog.Logger {
+func NewAppLogger(appName string) *slog.Logger {
 	logger := utils.NewSlogger()
 	return logger.With(
 		slog.String("app_name", appName),
@@ -18,11 +18,11 @@ func newAppLogger(appName string) *slog.Logger {
 }
 
 func SetAppName(appName string) {
-	applogger = newAppLogger(appName)
+	appLogger = NewAppLogger(appName)
 }
 
 func Info(payload string) {
-	applogger.Info(payload)
+	appLogger.Info(payload)
 }
 
 func Infof(format string, v ...any) {
@@ -31,13 +31,13 @@ func Infof(format string, v ...any) {
 		payload = fmt.Sprintf(format, v...)
 	}
 
-	Info(payload)
+	appLogger.Info(payload)
 }
 
 func Error(payload string) {
-	applogger.Error(payload)
+	appLogger.Error(payload)
 }
 
 func Errorf(payload string, error error) {
-	applogger.Error(payload, slog.Any("error", error))
+	appLogger.Error(payload, slog.Any("error", error))
 }

@@ -8,26 +8,25 @@ import (
 	"github.com/mariusfa/golf/logging/utils"
 )
 
-var tracelogger = NewTraceLogger("APP_NAME_NOT_SET")
+var traceLogger = NewTraceLogger("APP_NAME_NOT_SET")
 
 func NewTraceLogger(appName string) *slog.Logger {
-	logger := utils.NewSlogger()
-	return logger.With(
+	return utils.NewSlogger().With(
 		slog.String("app_name", appName),
 		slog.String("log_type", "TRACE"),
 	)
 }
 
 func SetAppName(appName string) {
-	tracelogger = NewTraceLogger(appName)
+	traceLogger = NewTraceLogger(appName)
 }
 
 func Info(ctx context.Context, payload string) {
 	username, requestId := utils.ExtractFromContext(ctx)
 
-	tracelogger.Info(
+	traceLogger.Info(
 		payload,
-		slog.String("username", username),
+		slog.String("user_id", username),
 		slog.String("request_id", requestId),
 	)
 }
@@ -40,23 +39,23 @@ func Infof(ctx context.Context, format string, v ...any) {
 	Info(ctx, payload)
 }
 
-func Errorf(ctx context.Context, payload string, err error) {
-	username, requestid := utils.ExtractFromContext(ctx)
-
-	tracelogger.Error(
-		payload,
-		slog.String("username", username),
-		slog.String("request_id", requestid),
-		slog.Any("error", err),
-	)
-}
-
 func Error(ctx context.Context, payload string) {
 	username, requestid := utils.ExtractFromContext(ctx)
 
-	tracelogger.Error(
+	traceLogger.Error(
 		payload,
-		slog.String("username", username),
+		slog.String("user_id", username),
 		slog.String("request_id", requestid),
+	)
+}
+
+func Errorf(ctx context.Context, payload string, err error) {
+	username, requestid := utils.ExtractFromContext(ctx)
+
+	traceLogger.Error(
+		payload,
+		slog.String("user_id", username),
+		slog.String("request_id", requestid),
+		slog.Any("error", err),
 	)
 }

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"github.com/mariusfa/golf/logging/accesslog"
 	"net/http"
 	"time"
 
@@ -23,22 +24,18 @@ func newCustomedResponseWriter(w http.ResponseWriter) *customResponseWriter {
 	return &customResponseWriter{w, http.StatusOK}
 }
 
-func AccessLogMiddleware(next http.Handler, logger AccessLoggerPort) http.Handler {
+func AccessLogMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		crw := newCustomedResponseWriter(w)
 		ctx := r.Context()
 		userContext := &auth.UserContext{Id: ""}
+
 		ctx = context.WithValue(ctx, UserKey, userContext)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 
 		durationMs := time.Since(start).Milliseconds()
-		requestId := r.Header.Get("X-Request-Id")
-		logger.Info(int(durationMs), crw.status, r.URL.Path, r.Method, requestId, userContext.Id)
+		accesslog.Info(ctx, int(durationMs), crw.status, r.URL.Path, r.Method)
 	})
-}
-
-type AccessLoggerPort interface {
-	Info(durationMs int, status int, requestPath string, requestMethod string, requestId string, userId string)
 }

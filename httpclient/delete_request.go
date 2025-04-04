@@ -1,25 +1,25 @@
 package httpclient
 
 import (
+	"context"
 	"fmt"
+	"github.com/mariusfa/golf/logging/transactionlog"
 	"net/http"
 	"time"
 )
 
 type DeleteRequest struct {
-	RequestId string
-	UserId    string
-	Headers   map[string]string
-	Url       string
+	Headers map[string]string
+	Url     string
 }
 
-func NewDeleteRequest(requestId string, headers map[string]string, url string) *DeleteRequest {
-	return &DeleteRequest{RequestId: requestId, Headers: headers, Url: url}
+func NewDeleteRequest(headers map[string]string, url string) *DeleteRequest {
+	return &DeleteRequest{Headers: headers, Url: url}
 }
 
-func (c *HttpClient) Delete(request *DeleteRequest) error {
+func (c *HttpClient) Delete(ctx context.Context, request *DeleteRequest) error {
 	httpAction := func() error {
-		return c.deletePlain(request)
+		return c.deletePlain(ctx, request)
 	}
 	bulkheadAction := func() error {
 		return c.bulkhead.Execute(httpAction)
@@ -33,7 +33,7 @@ func (c *HttpClient) Delete(request *DeleteRequest) error {
 	return nil
 }
 
-func (c *HttpClient) deletePlain(request *DeleteRequest) error {
+func (c *HttpClient) deletePlain(ctx context.Context, request *DeleteRequest) error {
 	req, err := http.NewRequest("DELETE", request.Url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -41,22 +41,25 @@ func (c *HttpClient) deletePlain(request *DeleteRequest) error {
 	for key, value := range request.Headers {
 		req.Header.Set(key, value)
 	}
-	c.logger.RequestInfo(request.RequestId, "DELETE", request.Url, "", request.UserId)
+
+	transactionlog.RequestInfo(ctx, "DELETE", request.Url, "")
+
 	start := time.Now()
 	resp, err := c.client.Do(req)
 	duratonMs := time.Since(start).Milliseconds()
+
 	if err != nil {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), 0, "", request.UserId)
+		transactionlog.ResponseInfo(ctx, int(duratonMs), 0, "")
 		return fmt.Errorf("failed to do request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
-		c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "", request.UserId)
+		transactionlog.ResponseInfo(ctx, int(duratonMs), resp.StatusCode, "")
 		return fmt.Errorf("%s from %s", resp.Status, request.Url)
 	}
 
-	c.logger.ResponseInfo(request.RequestId, fmt.Sprintf("%d", duratonMs), resp.StatusCode, "", request.UserId)
+	transactionlog.ResponseInfo(ctx, int(duratonMs), resp.StatusCode, "")
 
 	return nil
 }
