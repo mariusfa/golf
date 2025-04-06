@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/mariusfa/golf/request"
 )
 
 func RequestIdMiddleware(next http.Handler) http.Handler {
@@ -12,7 +13,10 @@ func RequestIdMiddleware(next http.Handler) http.Handler {
 		if requestId == "" {
 			requestId = uuid.New().String()
 		}
-		r.Header.Set("X-Request-Id", requestId)
+		ctx := r.Context()
+		requestIdCtx := ctx.Value(request.RequestIdCtxKey).(*request.RequestIdCtx)
+		requestIdCtx.RequestId = requestId
+
 		next.ServeHTTP(w, r)
 	})
 }

@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/mariusfa/golf/auth"
 	"github.com/mariusfa/golf/logging/accesslog"
+	"github.com/mariusfa/golf/request"
 )
 
 type fakeAccessLogger struct {
@@ -33,13 +33,13 @@ func helloAccessHandler() http.Handler {
 	})
 }
 
-func setDummyUserContext(next http.Handler) http.Handler {
+func setDummyContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		ctxValue := ctx.Value(UserKey)
-		userContext := ctxValue.(*auth.UserContext)
-		userContext.Id = "dummy"
-		next.ServeHTTP(w, r.WithContext(ctx))
+		sessionCtx := ctx.Value(request.SessionCtxKey).(*request.SessionCtx)
+		sessionCtx.Id = "dummy"
+
+		next.ServeHTTP(w, r)
 	})
 }
 
@@ -81,7 +81,7 @@ func TestAccessMiddlwareWithDummyUser(t *testing.T) {
 	loggerFake := &fakeAccessLogger{}
 
 	handler := helloAccessHandler()
-	handler = setDummyUserContext(handler)
+	handler = setDummyContext(handler)
 	handlerWithMiddleware := AccessLogMiddleware(handler, loggerFake)
 
 	router := http.NewServeMux()

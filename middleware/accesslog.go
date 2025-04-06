@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mariusfa/golf/auth"
+	"github.com/mariusfa/golf/request"
 )
 
 type customResponseWriter struct {
@@ -28,14 +28,16 @@ func AccessLogMiddleware(next http.Handler, logger AccessLoggerPort) http.Handle
 		start := time.Now()
 		crw := newCustomedResponseWriter(w)
 		ctx := r.Context()
-		userContext := &auth.UserContext{Id: ""}
-		ctx = context.WithValue(ctx, UserKey, userContext)
+
+		sessionCtx := &request.SessionCtx{}
+		ctx = context.WithValue(ctx, request.SessionCtxKey, sessionCtx)
+		requestIdCtx := &request.RequestIdCtx{}
+		ctx = context.WithValue(ctx, request.RequestIdCtxKey, requestIdCtx)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 
 		durationMs := time.Since(start).Milliseconds()
-		requestId := r.Header.Get("X-Request-Id")
-		logger.Info(int(durationMs), crw.status, r.URL.Path, r.Method, requestId, userContext.Id)
+		logger.Info(int(durationMs), crw.status, r.URL.Path, r.Method, requestIdCtx.RequestId, sessionCtx.Id)
 	})
 }
 

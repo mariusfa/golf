@@ -1,21 +1,36 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/mariusfa/golf/request"
 )
+
+func setDummyRequestContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		requestIdCtx := request.NewRequestIdCtx("")
+		ctx = context.WithValue(ctx, request.RequestIdCtxKey, requestIdCtx)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func requestIdHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestId := r.Header.Get("X-Request-Id")
-		w.Write([]byte(requestId))
+		requestIdCtx := r.Context().Value(request.RequestIdCtxKey).(*request.RequestIdCtx)
+
+		w.Write([]byte(requestIdCtx.RequestId))
 	})
 }
 
 func TestGetRequestIdFromIncomingHeader(t *testing.T) {
 	handler := requestIdHandler()
 	handlerWithMiddleware := RequestIdMiddleware(handler)
+	handlerWithMiddleware = setDummyRequestContext(handlerWithMiddleware)
 
 	router := http.NewServeMux()
 	router.Handle("/request", handlerWithMiddleware)
@@ -37,6 +52,7 @@ func TestGetRequestIdFromIncomingHeader(t *testing.T) {
 func TestGenerateRequestIdIfNotProvided(t *testing.T) {
 	handler := requestIdHandler()
 	handlerWithMiddleware := RequestIdMiddleware(handler)
+	handlerWithMiddleware = setDummyRequestContext(handlerWithMiddleware)
 
 	router := http.NewServeMux()
 	router.Handle("/request", handlerWithMiddleware)

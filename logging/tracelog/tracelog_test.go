@@ -56,7 +56,7 @@ func TestTraceLog_MissingContext(t *testing.T) {
 
 func setupContext() context.Context {
 	ctx := context.Background()
-	sessionCtx := request.NewSessionCtx("test_username", "test_user_id")
+	sessionCtx := request.NewSessionCtx("test_user_id", "test_name", "test_email", "test_username")
 	reqIdCtx := request.NewRequestIdCtx("123")
 	ctx = context.WithValue(ctx, request.SessionCtxKey, sessionCtx)
 	ctx = context.WithValue(ctx, request.RequestIdCtxKey, reqIdCtx)

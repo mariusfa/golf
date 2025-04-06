@@ -1,20 +1,20 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
 	"github.com/mariusfa/golf/auth"
+	"github.com/mariusfa/golf/request"
 )
 
 type AuthParams struct {
 	Secret   string
-	UserRepo userRepositoryPort
+	UserRepo auth.AuthUserRepository
 	Logger   loggerPort
 }
 
-func NewAuthParams(secret string, userRepo userRepositoryPort, logger loggerPort) AuthParams {
+func NewAuthParams(secret string, userRepo auth.AuthUserRepository, logger loggerPort) AuthParams {
 	return AuthParams{
 		Secret:   secret,
 		UserRepo: userRepo,
@@ -52,34 +52,27 @@ func Auth(next http.Handler, params AuthParams) http.Handler {
 			return
 		}
 
-		user, err := params.UserRepo.FindById(userId)
+		user, err := params.UserRepo.FindAuthUserById(userId)
 		if err != nil {
 			params.Logger.Error("Error finding user", requestId)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
-		contextUser := r.Context().Value(UserKey)
-		if contextUser != nil {
-			contextUser = user
+		sessionCtx, ok := r.Context().Value(request.SessionCtxKey).(*request.SessionCtx)
+		if !ok {
+			params.Logger.Error("Session context not found", requestId)
+			http.Error(w, "Session context not found", http.StatusInternalServerError)
+			return
 		}
+		sessionCtx.SetSessionCtx(user)
 
 		params.Logger.Info("User authenticated", requestId)
-		ctx := context.WithValue(r.Context(), UserKey, contextUser)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		next.ServeHTTP(w, r)
 	})
 }
 
 type loggerPort interface {
 	Info(message string, requestId string)
 	Error(message string, requestId string)
-}
-
-type userRepositoryPort interface {
-	FindById(userId string) (*User, error)
-}
-
-type User struct {
-	Id   string
-	Name string
 }

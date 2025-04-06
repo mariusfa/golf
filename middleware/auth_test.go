@@ -1,12 +1,14 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/mariusfa/golf/auth"
+	"github.com/mariusfa/golf/request"
 )
 
 func helloAuthHandler() http.Handler {
@@ -16,13 +18,13 @@ func helloAuthHandler() http.Handler {
 }
 
 type fakeUserRepository struct {
-	UserList map[string]*User
+	UserList map[string]auth.AuthUser
 }
 
-func (fur *fakeUserRepository) FindById(id string) (*User, error) {
+func (fur *fakeUserRepository) FindAuthUserById(id string) (auth.AuthUser, error) {
 	user, exists := fur.UserList[id]
 	if !exists {
-		return &User{}, errors.New("User not found")
+		return auth.AuthUser{}, errors.New("User not found")
 	}
 	return user, nil
 }
@@ -35,10 +37,23 @@ type fakeLogger struct {
 func (fl *fakeLogger) Info(message string, requestId string)  { fl.InfoMessage = message }
 func (fl *fakeLogger) Error(message string, requestId string) { fl.ErrorMessage = message }
 
+func setDummyAuthContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		requestIdCtx := request.NewRequestIdCtx("")
+		ctx = context.WithValue(ctx, request.RequestIdCtxKey, requestIdCtx)
+
+		sessionCtx := &request.SessionCtx{}
+		ctx = context.WithValue(ctx, request.SessionCtxKey, sessionCtx)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func TestFindUser(t *testing.T) {
 	fakeLogger := &fakeLogger{}
 	fakeUserRepo := &fakeUserRepository{
-		UserList: map[string]*User{
+		UserList: map[string]auth.AuthUser{
 			"123": {Id: "123", Name: "John"},
 		},
 	}
@@ -48,6 +63,7 @@ func TestFindUser(t *testing.T) {
 	authParams := NewAuthParams("secret", fakeUserRepo, fakeLogger)
 	handler := helloAuthHandler()
 	handlerWithMiddleware := Auth(handler, authParams)
+	handlerWithMiddleware = setDummyAuthContext(handlerWithMiddleware)
 
 	router := http.NewServeMux()
 	router.Handle("/hello", handlerWithMiddleware)
@@ -157,7 +173,7 @@ func TestMalformedHeader(t *testing.T) {
 func TestInvalidToken(t *testing.T) {
 	fakeLogger := &fakeLogger{}
 	fakeUserRepo := &fakeUserRepository{
-		UserList: map[string]*User{
+		UserList: map[string]auth.AuthUser{
 			"123": {Id: "123", Name: "John"},
 		},
 	}
@@ -193,7 +209,7 @@ func TestInvalidToken(t *testing.T) {
 func TestMissingUser(t *testing.T) {
 	fakeLogger := &fakeLogger{}
 	fakeUserRepo := &fakeUserRepository{
-		UserList: map[string]*User{
+		UserList: map[string]auth.AuthUser{
 			"123": {Id: "123", Name: "John"},
 		},
 	}
