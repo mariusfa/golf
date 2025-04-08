@@ -14,6 +14,7 @@ type AuthParams struct {
 	Logger   loggerPort
 }
 
+// TODO: Remove logger from params and use a global logger instead
 func NewAuthParams(secret string, userRepo auth.AuthUserRepository, logger loggerPort) AuthParams {
 	return AuthParams{
 		Secret:   secret,
