@@ -20,9 +20,9 @@ func NewSessionCtx(id, name, email, username string) *SessionCtx {
 	}
 }
 
-func (s *SessionCtx) SetSessionCtx(auth.AuthUser) {
-	s.Id = s.Id
-	s.Name = s.Name
-	s.Email = s.Email
-	s.Username = s.Username
+func (s *SessionCtx) SetSessionCtx(user auth.AuthUser) {
+	s.Id = user.Id
+	s.Name = user.Name
+	s.Email = user.Email
+	s.Username = user.Username
 }

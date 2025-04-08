@@ -5,6 +5,7 @@ type AuthUser struct {
 	Name           string
 	HashedPassword string
 	Email          string
+	Username       string
 }
 
 type AuthUserRepository interface {
