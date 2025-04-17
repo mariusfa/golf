@@ -29,4 +29,7 @@ For the moment the versioning is using running minor versions independent of bre
 
 When the repo is more stable and mature, it will be switched to semantic versioning.
 
+## Stuff to be done
+
+Check [TODO.md](TODO.md) for a list of things to be done.
 

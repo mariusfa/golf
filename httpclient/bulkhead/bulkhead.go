@@ -1,6 +1,5 @@
 package bulkhead
 
-// import semaphore
 import (
 	"errors"
 
