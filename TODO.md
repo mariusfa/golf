@@ -11,4 +11,3 @@
 
 - Auth.go use http.error instead of writeheader when error
 
-- Remove UserKey from context key in middleware package
