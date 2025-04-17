@@ -29,14 +29,6 @@ func (fur *fakeUserRepository) FindAuthUserById(id string) (auth.AuthUser, error
 	return user, nil
 }
 
-type fakeLogger struct {
-	InfoMessage  string
-	ErrorMessage string
-}
-
-func (fl *fakeLogger) Info(message string, requestId string)  { fl.InfoMessage = message }
-func (fl *fakeLogger) Error(message string, requestId string) { fl.ErrorMessage = message }
-
 func setDummyAuthContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -51,7 +43,6 @@ func setDummyAuthContext(next http.Handler) http.Handler {
 }
 
 func TestFindUser(t *testing.T) {
-	fakeLogger := &fakeLogger{}
 	fakeUserRepo := &fakeUserRepository{
 		UserList: map[string]auth.AuthUser{
 			"123": {Id: "123", Name: "John"},
@@ -60,7 +51,7 @@ func TestFindUser(t *testing.T) {
 	token, _ := auth.CreateToken("123", "secret", nil)
 	headerValue := "Bearer " + token
 
-	authParams := NewAuthParams("secret", fakeUserRepo, fakeLogger)
+	authParams := NewAuthParams("secret", fakeUserRepo)
 	handler := helloAuthHandler()
 	handlerWithMiddleware := Auth(handler, authParams)
 	handlerWithMiddleware = setDummyAuthContext(handlerWithMiddleware)
@@ -77,19 +68,10 @@ func TestFindUser(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", w.Code, http.StatusOK)
 	}
-
-	if fakeLogger.ErrorMessage != "" {
-		t.Errorf("authParams.Logger.ErrorMessage is not empty")
-	}
-
-	if fakeLogger.InfoMessage != "User authenticated" {
-		t.Errorf("authParams.Logger.InfoMessage is not 'User authenticated'")
-	}
 }
 
 func TestMissingHeader(t *testing.T) {
-	fakeLogger := &fakeLogger{}
-	authParams := NewAuthParams("secret", &fakeUserRepository{}, fakeLogger)
+	authParams := NewAuthParams("secret", &fakeUserRepository{})
 	handler := helloAuthHandler()
 	handlerWithMiddleware := Auth(handler, authParams)
 
@@ -104,19 +86,10 @@ func TestMissingHeader(t *testing.T) {
 	if status := w.Code; status != http.StatusUnauthorized {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusUnauthorized)
 	}
-
-	if fakeLogger.ErrorMessage != "Missing Authorization header" {
-		t.Errorf("authParams.Logger.ErrorMessage is not 'Missing Authorization header'")
-	}
-
-	if fakeLogger.InfoMessage != "" {
-		t.Errorf("authParams.Logger.InfoMessage is not empty")
-	}
 }
 
 func TestMissingBearerString(t *testing.T) {
-	fakeLogger := &fakeLogger{}
-	authParams := NewAuthParams("secret", &fakeUserRepository{}, fakeLogger)
+	authParams := NewAuthParams("secret", &fakeUserRepository{})
 	handler := helloAuthHandler()
 	handlerWithMiddleware := Auth(handler, authParams)
 
@@ -132,19 +105,10 @@ func TestMissingBearerString(t *testing.T) {
 	if status := w.Code; status != http.StatusUnauthorized {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusUnauthorized)
 	}
-
-	if fakeLogger.ErrorMessage != "Missing token" {
-		t.Errorf("authParams.Logger.ErrorMessage is not 'Missing token'")
-	}
-
-	if fakeLogger.InfoMessage != "" {
-		t.Errorf("authParams.Logger.InfoMessage is not empty")
-	}
 }
 
 func TestMalformedHeader(t *testing.T) {
-	fakeLogger := &fakeLogger{}
-	authParams := NewAuthParams("secret", &fakeUserRepository{}, fakeLogger)
+	authParams := NewAuthParams("secret", &fakeUserRepository{})
 	handler := helloAuthHandler()
 	handlerWithMiddleware := Auth(handler, authParams)
 
@@ -160,18 +124,9 @@ func TestMalformedHeader(t *testing.T) {
 	if status := w.Code; status != http.StatusUnauthorized {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusUnauthorized)
 	}
-
-	if fakeLogger.ErrorMessage != "Invalid Authorization header" {
-		t.Errorf("authParams.Logger.ErrorMessage is not 'Invalid Authorization header'")
-	}
-
-	if fakeLogger.InfoMessage != "" {
-		t.Errorf("authParams.Logger.InfoMessage is not empty")
-	}
 }
 
 func TestInvalidToken(t *testing.T) {
-	fakeLogger := &fakeLogger{}
 	fakeUserRepo := &fakeUserRepository{
 		UserList: map[string]auth.AuthUser{
 			"123": {Id: "123", Name: "John"},
@@ -180,7 +135,7 @@ func TestInvalidToken(t *testing.T) {
 	token := "123"
 	headerValue := "Bearer " + token
 
-	authParams := NewAuthParams("secret", fakeUserRepo, fakeLogger)
+	authParams := NewAuthParams("secret", fakeUserRepo)
 	handler := helloAuthHandler()
 	handlerWithMiddleware := Auth(handler, authParams)
 
@@ -196,18 +151,9 @@ func TestInvalidToken(t *testing.T) {
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("handler returned wrong status code: got %v want %v", w.Code, http.StatusUnauthorized)
 	}
-
-	if fakeLogger.ErrorMessage != "Error parsing token" {
-		t.Errorf("authParams.Logger.ErrorMessage is not 'Error parsing token'")
-	}
-
-	if fakeLogger.InfoMessage != "" {
-		t.Errorf("authParams.Logger.InfoMessage is not empty")
-	}
 }
 
 func TestMissingUser(t *testing.T) {
-	fakeLogger := &fakeLogger{}
 	fakeUserRepo := &fakeUserRepository{
 		UserList: map[string]auth.AuthUser{
 			"123": {Id: "123", Name: "John"},
@@ -216,7 +162,7 @@ func TestMissingUser(t *testing.T) {
 	token, _ := auth.CreateToken("1234", "secret", nil)
 	headerValue := "Bearer " + token
 
-	authParams := NewAuthParams("secret", fakeUserRepo, fakeLogger)
+	authParams := NewAuthParams("secret", fakeUserRepo)
 	handler := helloAuthHandler()
 	handlerWithMiddleware := Auth(handler, authParams)
 
@@ -231,13 +177,5 @@ func TestMissingUser(t *testing.T) {
 
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("handler returned wrong status code: got %v want %v", w.Code, http.StatusUnauthorized)
-	}
-
-	if fakeLogger.ErrorMessage != "Error finding user" {
-		t.Errorf("authParams.Logger.ErrorMessage is not 'Error finding user'")
-	}
-
-	if fakeLogger.InfoMessage != "" {
-		t.Errorf("authParams.Logger.InfoMessage is not empty")
 	}
 }

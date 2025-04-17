@@ -5,8 +5,6 @@
 
 - Create a predefined list of middlewares to be used in router groups.
 
-- Remove logger interfaces and just use actual correct loggers.
-
 - Create a test for database using testcontainers
 
 - Auth.go use http.error instead of writeheader when error
