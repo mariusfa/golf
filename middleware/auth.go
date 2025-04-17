@@ -26,33 +26,34 @@ func Auth(next http.Handler, params AuthParams) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			applog.Error("Missing Authorization header")
-			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		if !strings.HasPrefix(authHeader, "Bearer ") {
 			applog.Error("Invalid Authorization header")
-			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		token := authHeader[len("Bearer "):]
 		if token == "" {
 			applog.Error("Missing token")
-			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		userId, err := auth.ParseToken(token, params.Secret)
 		if err != nil {
 			applog.Error("Error parsing token")
-			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		user, err := params.UserRepo.FindAuthUserById(userId)
 		if err != nil {
 			applog.Error("Error finding user")
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
