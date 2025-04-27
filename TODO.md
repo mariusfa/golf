@@ -9,5 +9,7 @@
 
 - Auth.go use http.error instead of writeheader when error
 
-- Remove middleware logging
+- Create apperror package
+
+- Bump deps
 
