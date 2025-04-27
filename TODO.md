@@ -13,3 +13,4 @@
 
 - Bump deps
 
+- Remove logger interface from http client
