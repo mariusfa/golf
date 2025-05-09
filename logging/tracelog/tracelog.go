@@ -52,10 +52,13 @@ func Error(ctx context.Context, payload string) {
 func Errorf(ctx context.Context, payload string, err error) {
 	username, requestid := utils.ExtractFromContext(ctx)
 
+	if err != nil {
+		payload = fmt.Sprintf(payload+": %v", err)
+	}
+
 	traceLogger.Error(
 		payload,
 		slog.String("user_id", username),
 		slog.String("request_id", requestid),
-		slog.Any("error", err),
 	)
 }

@@ -45,8 +45,9 @@ func TestAppLog_Infof(t *testing.T) {
 		Infof("test payload %s", "formatted")
 	})
 
-	if !strings.Contains(out, "\"payload\":\"test payload formatted\"") {
-		t.Errorf("Expected output to contain %q, but was not found. Ouput: %q", "\"message\": \"test payload formatted\"", out)
+	expected := "\"payload\":\"test payload formatted\""
+	if !strings.Contains(out, expected) {
+		t.Errorf("Expected output to contain %q, but was not found. Ouput: %q", expected, out)
 	}
 }
 
@@ -56,11 +57,9 @@ func TestAppLog_Errorf(t *testing.T) {
 		Errorf("test payload", fmt.Errorf("error occured"))
 	})
 
-	if !strings.Contains(out, "\"payload\":\"test payload\"") {
-		t.Errorf("Expected output to contain %q, but was not found. Ouput: %q", "\"message\": \"test payload formatted\"", out)
-	}
-	if !strings.Contains(out, "\"error\":\"error occured\"") {
-		t.Errorf("Expected output to contain %q, but was not found. Ouput: %q", "\"error\": \"error occured\"", out)
+	expected := "\"payload\":\"test payload: error occured\""
+	if !strings.Contains(out, expected) {
+		t.Errorf("Expected output to contain %q, but was not found. Ouput: %q", expected, out)
 	}
 }
 

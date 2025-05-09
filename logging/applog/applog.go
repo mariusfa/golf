@@ -39,5 +39,9 @@ func Error(payload string) {
 }
 
 func Errorf(payload string, error error) {
-	appLogger.Error(payload, slog.Any("error", error))
+	if error != nil {
+		payload = fmt.Sprintf(payload+": %v", error)
+	}
+
+	appLogger.Error(payload)
 }
