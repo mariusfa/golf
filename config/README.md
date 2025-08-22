@@ -1,34 +1,44 @@
-# Config package
-This is a package for default config setup
+# Config
+
+This package provides environment-based configuration with automatic struct field mapping.
 
 ## Usage
-The `GetConfig` function takes 3 arguments:
-- envFile - a string that represents the path to the `.env` file
-- config - a pointer to a struct that represents the configuration
 
-The `GetConfig` function returns an error if the configuration is not valid.
+The `GetConfig` function takes 2 arguments:
+- `filename` - path to the `.env` file (optional, can be empty)
+- `config` - pointer to a struct that will be populated
 
-The `config` struct requires all the member variables to be strings. All the member variables are required by default. If you want to make a member variable optional, you can add the `required:"false"` tag to the member variable.
-
-Here is an example of how to use this package.
 ```go
 type Config struct {
-	Port string // This is required by default
-	OptionalSetting string `required:"false"`
+    Port string                    // Required by default
+    DatabaseHost string            // Maps to DATABASE_HOST
+    OptionalSetting string `required:"false"` // Optional field
 }
 
 var config Config
-
 err := GetConfig(".env", &config)
 if err != nil {
-	t.Fatal(err)
+    log.Fatal(err)
 }
 ```
 
-An example of the logger impl you can find in the logging package app-log.
+## Field Mapping
 
+Struct field names are automatically converted to SNAKE_CASE environment variables:
+- `ServerPort` → `SERVER_PORT`
+- `DatabaseHost` → `DATABASE_HOST`
 
-For local dev use `.env file. Example of file:
+## Configuration
+
+- All fields must be strings
+- Fields are required by default
+- Use `required:"false"` tag for optional fields
+- Missing required environment variables return an error
+
+## Environment File
+
+Example `.env` file:
 ```bash
 PORT=8080
+DATABASE_HOST=localhost
 ```
