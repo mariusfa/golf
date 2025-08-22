@@ -1,19 +1,35 @@
-# Access log package
+# Access Log
 
-This is a package for access logging in a web app.
+This package provides HTTP access logging for web applications.
 
 ## Usage
 
-Here is an example of how to use this package.
-Init logger in main to be used everywhere in the app.
+Initialize the logger in main and use in HTTP handlers:
 
 ```go
+import "github.com/mariusfa/golf/logging/accesslog"
+
 // In main function
 appName := "todo"
 accesslog.SetAppName(appName)
 
-// Used elsewhere in the app
-duration := 100
+// Used in HTTP middleware or handlers
+duration := 150 // milliseconds
 status := 200
-accesslog.Info(duration, status, "/path", "GET")
+path := "/api/users"
+method := "GET"
+
+accesslog.Info(duration, status, path, method)
 ```
+
+## Purpose
+
+Specifically designed for:
+- HTTP request/response logging
+- Performance monitoring (request duration)
+- Access pattern analysis
+- API usage tracking
+
+## Integration
+
+This package is automatically used by the middleware package for request logging.

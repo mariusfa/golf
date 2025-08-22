@@ -1,36 +1,27 @@
-# Transaction log package
+# Transaction Log
 
-This is a package for transaction logging.
+This package provides transaction logging for tracking business operations and external API calls.
 
 ## Usage
 
-Here is an example of how to use this package.
-Start with creating a package in `internal/logging` and add a file `logging.go` with the following content:
+Initialize and use the transaction logger:
+
 ```go
-package logging
+import "github.com/mariusfa/golf/logging/transactionlog"
 
-import translog "github.com/mariusfa/gofl/v2/logging/trans-log"
+// In main function
+appName := "todo"
+transactionlog.SetAppName(appName)
 
-var TransLogger *translog.TransLogger
-
-func SetupTransLogger(appName string) {
-	TransLogger = translog.NewTransLogger(appName)
-}
+// Used for logging transactions
+transactionlog.Info("User created successfully")
+transactionlog.Error("Payment processing failed")
 ```
 
-In the main.go file, you can use the logger like this:
-```go
-package main
+## Purpose
 
-import (
-	"<my-module>/internal/logging"
-
-	"github.com/mariusfa/gofl/v2/config"
-)
-
-func main() {
-	logging.SetupTransLogger("<my-module>")
-	transLogger := logging.TransLogger
-
-    // ... rest of the code
-}
+Used for logging:
+- Business transactions and operations
+- External API calls and responses  
+- Audit trails for compliance
+- Performance monitoring of critical operations

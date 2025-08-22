@@ -1,17 +1,24 @@
-# Trace log package
+# Trace Log
 
-This is a package for logging inside of app. Typical used for error logging explicit.
+This package provides request tracing and error logging for applications.
 
 ## Usage
 
-Here is an example of how to use this package.
-Init logger in main to be used everywhere in the app.
+Initialize the logger in main and use throughout the app:
 
 ```go
 // In main function
 appName := "todo"
-translog.SetAppName(appName)
+tracelog.SetAppName(appName)
 
-// Used elsewhere in the app
-translog.Info("This is an info message")
+// Used elsewhere in the app for tracing requests
+tracelog.Info("Processing user request")
+tracelog.Error("Database connection failed")
 ```
+
+## Purpose
+
+Typically used for:
+- Request tracing and debugging
+- Error logging with context
+- Application flow monitoring
