@@ -1,57 +1,45 @@
-# Router groups 
+# Router Groups
 
-En `RouterGroup` kan brukes for å gruppere en samling endepunkter under samme prefix. 
-Den kan også brukes til å definere et sett med `Middleware` som skal gjelde for endepunktene
-som er registrert på denne gruppen.
+A `RouterGroup` can be used to group a collection of endpoints under the same prefix. 
+It can also be used to define a set of `Middleware` that should apply to all endpoints
+registered on this group.
 
-## Ta i bruk
+## Usage
 
-Eksmpel på bruk:
+Example with public and private route groups:
 ```go
-    sb1skAdapter := sb1sk.NewAdapter(config.Sb1skTokenPath, config.Sb1skHost)
-    router := http.NewServeMux()
-    sb1Middlwares := routergroup.SB1Middlewares(sb1skAdapter)
+router := http.NewServeMux()
 
-    routerGroup := &routergroup.RouterGroup{
-        Prefix: "/api/common/banking", 
-        Middlewares: sb1Middlwares, 
-        Mux: router
-    }
+// Public routes (no authentication needed)
+publicGroup := routergroup.NewRouterGroup("/api/public", router)
+publicGroup.Use(middleware.RequestIdMiddleware)
+publicGroup.Use(middleware.AccessLogMiddleware)
+
+// Private routes (authentication required)
+authParams := middleware.NewAuthParams(jwtSecret, userRepo)
+privateGroup := routergroup.NewRouterGroup("/api/private", router)
+privateGroup.Use(middleware.RequestIdMiddleware)
+privateGroup.Use(middleware.AccessLogMiddleware)
+privateGroup.Use(func(next http.Handler) http.Handler {
+    return middleware.Auth(next, authParams)
+})
+
+// Register routes
+publicGroup.HandleFunc("GET", "/health", healthHandler)
+privateGroup.HandleFunc("GET", "/users", getUsersHandler)
 ```
 
-Middlewares defineres som en funksjon som tar en `http.Handler` som argument og returnerer en `http.Handler`.:
-
+Custom middleware:
 ```go
-    logTime := func(next http.Handler) http.Handler {
-        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-            start := time.Now()
-            next.ServeHTTP(w, r)
-            log.Printf("Request took: %v", time.Since(start))
-        })
-    }
+logTime := func(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        next.ServeHTTP(w, r)
+        log.Printf("Request took: %v", time.Since(start))
+    })
+}
 
-    router := http.NewServeMux()
-    routerGroup := &routergroup.RouterGroup{
-        Prefix: "/api/common/banking", 
-        Middlewares: []routergroup.Middleware{logTime}, 
-        Mux: router
-    }
-```
-
-
-Registrering av routes:
-
-```go
-    routergroup.HandleFunc("GET", "/watchlists", getAll)
-    routergroup.HandleFunc("POST", "/watchlists", post)
-
-    func getAll (w http.ResponseWriter, r *http.Request) {
-        // ...
-        w.WriteHeader(http.StatusOk)
-    }
-
-    func post (w http.ResponseWriter, r *http.Request) {
-        //...
-        w.WriteHeader(http.StatusCreated)
-    }
+apiGroup := routergroup.NewRouterGroup("/api", router)
+apiGroup.Use(logTime)
+apiGroup.HandleFunc("GET", "/items", getItemsHandler)
 ```
