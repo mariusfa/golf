@@ -1,60 +1,94 @@
-# Httpclient
+# HTTP Client
 
-This is a package to do http requests. Included in these http requests are GET, POST, PUT and DELETE.
-All of them have circuit break, bulkhead and transaction logging.
+This package provides a resilient HTTP client with built-in fault tolerance patterns for GET, POST, PUT, and DELETE requests.
 
-The transaction logging is just an interface. So bring your own logging or use use transaction logging from golf.
+## Features
+
+- **Circuit Breaker**: Prevents cascading failures by monitoring request success/failure rates
+- **Bulkhead**: Isolates resources to prevent one failing service from affecting others  
+- **Timeout Handling**: 15-second default timeout for all requests
+- **JSON Support**: Built-in JSON serialization/deserialization
+- **Request Logging**: Interface for transaction logging (bring your own logger)
+
+## Resilience Patterns
+
+The client implements enterprise-grade resilience patterns automatically:
+- Circuit breaker monitors request patterns and fails fast when services are down
+- Bulkhead pattern isolates different service calls to prevent resource exhaustion
+- Configurable timeouts prevent hanging requests
 
 ## Dependencies
-- https://github.com/jarcoal/httpmock (for testing)
+- github.com/jarcoal/httpmock (for testing)
 
 ## Usage
-Get requests
+
+### Setup
 ```go
-client := NewHttpClient(fakeLogger)
+import "github.com/mariusfa/golf/httpclient"
+
+client := httpclient.NewHttpClient()
+```
+
+### GET Requests
+```go
 var dto MyDto
-
-requestId := "test" // Used for transaction logging
-url := "http://localhost:8080"
+requestId := "req-123" // For transaction logging
+url := "http://api.example.com/users"
 headers := map[string]string{"Accept": "application/json"}
-getRequest := NewGetRequest(requestId, headers, url)
+
+getRequest := httpclient.NewGetRequest(requestId, headers, url)
 err := client.GetJson(getRequest, &dto)
-
+if err != nil {
+    // Handle error (circuit breaker, timeout, etc.)
+}
 ```
 
-Post requests
+### POST Requests
 ```go
-client := NewHttpClient(fakeLogger)
-requestDto := MyDto{Name: "Crazy Test"}
-
-requestId := "test"
-url := "http://localhost:8080"
+requestDto := MyDto{Name: "John Doe"}
+requestId := "req-124"
+url := "http://api.example.com/users"
 headers := map[string]string{"Content-Type": "application/json"}
 
-postRequest := NewPostRequest(requestId, headers, url, requestDto)
+postRequest := httpclient.NewPostRequest(requestId, headers, url, requestDto)
 err := client.PostJson(postRequest, nil)
+if err != nil {
+    // Handle error
+}
 ```
 
-Put requests
+### PUT Requests
 ```go
-client := NewHttpClient(fakeLogger)
-requestDto := MyDto{Name: "Crazy Test"}
-
-requestId := "test"
-url := "http://localhost:8080"
+updateDto := MyDto{Name: "Jane Doe"}
+requestId := "req-125"
+url := "http://api.example.com/users/1"
 headers := map[string]string{"Content-Type": "application/json"}
 
-putRequest := NewPutRequest(requestId, headers, url, requestDto)
+putRequest := httpclient.NewPutRequest(requestId, headers, url, updateDto)
 err := client.PutJson(putRequest, nil)
+if err != nil {
+    // Handle error
+}
 ```
 
-Delete requests
+### DELETE Requests
 ```go
-client := NewHttpClient(fakeLogger)
-
-requestId := "test"
-url := "http://localhost:8080/1"
+requestId := "req-126"
+url := "http://api.example.com/users/1"
 headers := map[string]string{}
-getRequest := NewDeleteRequest(requestId, headers, url)
-err := client.Delete(getRequest)
+
+deleteRequest := httpclient.NewDeleteRequest(requestId, headers, url)
+err := client.Delete(deleteRequest)
+if err != nil {
+    // Handle error
+}
 ```
+
+## Error Handling
+
+The client returns errors for various failure scenarios:
+- Network timeouts (after 15 seconds)
+- Circuit breaker open (service unavailable)
+- Bulkhead capacity exceeded
+- HTTP error status codes
+- JSON serialization/deserialization errors
