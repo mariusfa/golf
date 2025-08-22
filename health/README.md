@@ -1,20 +1,34 @@
-# Health pakke
+# Health
 
-Dette er en pakke for helsesjekk av en app. Helsesjekken er en HTTP GET request til `/health` som returnerer en HTTP status code 200.
+This package provides a standard health check endpoint for web applications.
 
-Per default så spørr AWS på dette endepunktet for å sjekke om en app er oppe og kjører. Hvis appen ikke svarer så vil ikke AWS sende trafikk til appen.
+## Features
 
-## Ta i bruk
+- Simple HTTP GET endpoint at `/health`
+- Returns HTTP 200 status with "OK" response
+- Used by load balancers and monitoring systems to verify application health
+
+## Usage
 
 ```go
 import (
 	"net/http"
-
-	"github.com/sparebank1utvikling/gal/health"
+	"github.com/mariusfa/golf/health"
 )
+
 func main() {
 	router := http.NewServeMux()
 	health.RegisterRoute(router)
 	http.ListenAndServe(":8080", router)
 }
+```
+
+## Response
+
+```
+GET /health
+HTTP/1.1 200 OK
+Content-Type: text/plain
+
+OK
 ```
