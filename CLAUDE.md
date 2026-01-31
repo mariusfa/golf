@@ -173,11 +173,10 @@ type Config struct {
 
 ## Important Notes
 
-- The project uses Go 1.22.2 features
+- The project uses Go 1.25.6
 - Docker is required for local database development
 - All packages include comprehensive README documentation
 - Authentication uses JWT tokens
 - Database connections use separate users for migrations vs application access
 - Logging is structured using Go's slog package
 - HTTP routing uses the enhanced ServeMux from Go 1.22+
-- ikke ha med claude i commit meldinger
