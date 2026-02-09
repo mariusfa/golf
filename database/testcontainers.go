@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"testing"
 	"time"
 
@@ -20,13 +22,12 @@ func SinglePostgresTestMain(m *testing.M, dbConfig *DbConfig, migrationPath stri
 	if err != nil {
 		log.Fatalf("Failed to setup container: %v", err)
 	}
-	defer cleanUp()
-
 	if err := Migrate(dbConfig, migrationPath); err != nil {
 		log.Fatalf("Failed to migrate: %v", err)
 	}
 
 	code := m.Run()
+	cleanUp()
 	os.Exit(code)
 }
 
@@ -45,10 +46,21 @@ func SetupContainer(dbConfig *DbConfig) (func(), error) {
 			panic(err)
 		}
 	}
+	registerInterruptListener(cleanUp)
 
 	getHostPortConfig(container, dbConfig)
 
 	return cleanUp, nil
+}
+
+func registerInterruptListener(cleanup func()) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cleanup()
+		os.Exit(1)
+	}()
 }
 
 func createPostgresContainer(dbConfig *DbConfig) (testcontainers.Container, error) {
